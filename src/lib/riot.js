@@ -1,6 +1,6 @@
-// Historique de parties via le relais Riot du coach (Cloudflare Worker « lol-relais »).
+// Historique de parties via le relais Riot (worker/ de ce dépôt, Cloudflare Worker).
 // Remplace la fonction Base44 getMatchHistory. La clé Riot reste dans le worker, jamais ici.
-// Routes utilisées : /matches (existe), /match?lite=2 (patch proposé, voir worker-patch/),
+// Routes utilisées : /matches (existe), /match?lite=2 (worker/riot-proxy.js),
 // /rank (patch proposé). Sans le patch, /match renvoie la partie complète (avec chronologie) : ça marche, en plus lourd.
 import { DD, DATA, norm } from '@/lib/gameData';
 import { getSettings } from '@/lib/localStore';

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchMatchHistory, fetchRank } from '@/lib/riot';
 import { getSettings, setSettings, getProfile, setProfile } from '@/lib/localStore';
-import { COACH_BASE_DEFAULT, RELAY_DEFAULT } from '@/lib/gameData';
-import { loadCoachData } from '@/lib/dataLoader';
+import { RELAY_DEFAULT } from '@/lib/gameData';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
@@ -206,17 +205,15 @@ function MatchCard({ match, ddVersion }) {
 
 const PLATFORMS = [['euw1', 'EUW'], ['eun1', 'EUNE'], ['tr1', 'TR'], ['na1', 'NA'], ['kr', 'KR'], ['br1', 'BR'], ['jp1', 'JP']];
 
-// Réglages (pas de compte) : pseudo de partage, serveur, adresses du relais Riot et des données du coach
+// Réglages (pas de compte) : pseudo de partage, serveur, adresse du relais Riot
 function SettingsPanel() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(() => ({ ...getSettings(), name: getProfile().name || '' }));
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const save = async () => {
+  const save = () => {
     setProfile({ ...getProfile(), name: form.name.trim().slice(0, 24) });
-    setSettings({ relay: form.relay.trim() || RELAY_DEFAULT, coachBase: form.coachBase.trim() || COACH_BASE_DEFAULT, platform: form.platform });
-    const errs = await loadCoachData();
-    if (errs.length) toast.error('Données du coach indisponibles : ' + errs.join(', '));
-    else toast.success('Réglages enregistrés');
+    setSettings({ relay: form.relay.trim() || RELAY_DEFAULT, platform: form.platform });
+    toast.success('Réglages enregistrés');
   };
   const field = 'w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary';
   return (
@@ -239,12 +236,8 @@ function SettingsPanel() {
             </select>
           </label>
           <label className="block space-y-1">
-            <span className="text-xs text-muted-foreground">Relais Riot (worker du coach)</span>
+            <span className="text-xs text-muted-foreground">Relais Riot</span>
             <input className={field} value={form.relay} onChange={e => set('relay', e.target.value)} placeholder={RELAY_DEFAULT} />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-xs text-muted-foreground">Données du coach (builds, counters, méta)</span>
-            <input className={field} value={form.coachBase} onChange={e => set('coachBase', e.target.value)} placeholder={COACH_BASE_DEFAULT} />
           </label>
           <button onClick={save} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">Enregistrer</button>
           <p className="text-[11px] text-muted-foreground leading-snug">Tout est gardé dans ce navigateur. La clé Riot reste dans le relais, jamais dans l'application.</p>

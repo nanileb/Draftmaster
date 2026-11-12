@@ -1,9 +1,8 @@
 // Calcule les 10 meilleures drafts du patch et les écrit dans public/data/best-drafts.json.
 // Remplace le workflow Base44 « Actualiser les meilleures drafts quotidiennement » (qui faisait inventer
-// les compos et les taux de victoire par une IA). Ici : données réelles du Coach Support.
+// les compos et les taux de victoire par une IA). Ici : données réelles de DraftMaster (public/data).
 // Usage : node tools/best-drafts.mjs
-//   COACH_BASE  (défaut https://nanileb.github.io/lol-support-coach/) : où lire builds.json, counters.json, meta.json
-//   COACH_DIR   (facultatif) : dossier local contenant ces 3 fichiers (prioritaire sur COACH_BASE)
+//   DATA_DIR    (défaut public/data) : dossier contenant builds.json, counters.json, meta.json
 //   MIN_GAMES   (défaut 100) : parties minimum d'un champion à son poste pour entrer dans une draft
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -13,9 +12,9 @@ import { buildChampion, enrichChampion } from '../src/lib/championEngine.js';
 import { computeBestDrafts, BEST_DRAFT_MIN_GAMES } from '../src/lib/bestDraftsEngine.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const BASE = (process.env.COACH_BASE || 'https://nanileb.github.io/lol-support-coach/').replace(/\/?$/, '/');
+const DATA_DIR = process.env.DATA_DIR || join(ROOT, 'public/data');
 const getJSON = async u => { const r = await fetch(u); if (!r.ok) throw new Error(r.status + ' ' + u); return r.json(); };
-const coach = async f => process.env.COACH_DIR ? JSON.parse(readFileSync(join(process.env.COACH_DIR, f + '.json'), 'utf8')) : getJSON(BASE + f + '.json');
+const local = async f => JSON.parse(readFileSync(join(DATA_DIR, f + '.json'), 'utf8'));
 
 const version = (await getJSON(`${DD}/api/versions.json`))[0];
 const [champs, items] = await Promise.all([
@@ -24,7 +23,7 @@ const [champs, items] = await Promise.all([
 ]);
 const it = {}; Object.entries(items.data).forEach(([id, x]) => { it[id] = { name: x.name, tags: x.tags || [] }; });
 setData({ champs: champs.data, version, items: it });
-const [builds, counters, meta] = await Promise.all([coach('builds'), coach('counters'), coach('meta')]);
+const [builds, counters, meta] = await Promise.all([local('builds'), local('counters'), local('meta')]);
 setData({ builds: fixIds(builds), cnt: fixIds(counters), meta });
 
 const byId = {};

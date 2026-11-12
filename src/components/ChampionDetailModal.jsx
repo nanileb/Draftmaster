@@ -55,7 +55,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
     let alive = true;
     setLoading(true);
     setActiveTab('spells');
-    // Statistiques et fiche : données du coach (builds.json, counters.json) — plus d'appel IA
+    // Statistiques et fiche : data/builds.json et data/counters.json — plus d'appel IA
     setStat(championStat(champion.id, role));
     const d = championDetails(champion.id, role);
     setDetails({ ...d, spells: [] });
@@ -243,7 +243,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-xs">Pas assez de parties pour ce champion à ce poste dans les données du coach.</p>
+                    <p className="text-muted-foreground text-xs">Pas assez de parties pour ce champion à ce poste dans les statistiques du patch.</p>
                   )}
                 </div>
 
@@ -260,7 +260,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-xs">Pas assez de parties pour ce champion à ce poste dans les données du coach.</p>
+                    <p className="text-muted-foreground text-xs">Pas assez de parties pour ce champion à ce poste dans les statistiques du patch.</p>
                   )}
                 </div>
 
@@ -289,7 +289,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-xs">Pas assez de parties en duo dans les données du coach.</p>
+                  <p className="text-muted-foreground text-xs">Pas assez de parties en duo dans les statistiques du patch.</p>
                 )}
                 {details?.synergyTips && (
                   <div className="glass rounded-xl p-3 border border-border">

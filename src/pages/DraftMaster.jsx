@@ -27,7 +27,7 @@ function getActiveTab(pathname) {
 
 export default function DraftMaster() {
   const { champions: rawChampions, loading, error, version, reload } = useChampions();
-  // Données partagées du coach (builds, counters, meta) : les profils de champions sont recalculés à leur arrivée
+  // Statistiques (data/builds, counters, meta) : les profils de champions sont recalculés à leur arrivée
   const dataRev = useGameData(version);
   const champions = useMemo(() => rawChampions.map(enrichChampion), [rawChampions, dataRev]);
   const location = useLocation();

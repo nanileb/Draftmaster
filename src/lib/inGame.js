@@ -428,7 +428,7 @@ function eventsRole(m, E, T, side, jg, jp, myJg) {
   E(T.baron, 'obj', 'Baron (20:00)', 'Jamais sans savoir où est leur jungler.', null, 'baron');
 }
 
-// Règles du patch (meta.json du coach) ; celles propres au support seulement en support
+// Règles du patch (data/meta.json) ; celles propres au support seulement en support
 export function patchRules(role) {
   const fix = t => role === 'SUPPORT' ? t : t.replace(/ Passe à l'Oracle et regroupe-toi avec ton jungler et ton mid\./, ' Regroupe-toi avec ton équipe pour les objectifs.');
   return (meta().supportRules || []).filter(r => role === 'SUPPORT' || !/quête|roam/i.test(r.title)).map(r => ({ title: r.title, text: fix(r.text) }));

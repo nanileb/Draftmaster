@@ -2,16 +2,16 @@
 // DONNÉES DE JEU — chargement et lecture
 // Sources :
 //  - Data Dragon (Riot) : patch, champions, objets, runes, sorts (fr_FR)
-//  - Données partagées de l'app Coach Support (même dépôt GitHub Pages) :
-//      builds.json   : parties Challenger / GM / Master (EUW + Corée) : WR, builds, duos, adversaires
-//      counters.json : duels par lane (Lolalytics, Émeraude+)
-//      meta.json     : tiers support, profils, listes engage / frontline / assassins, timers
-//  - data/combos.json, data/best-drafts.json : fichiers propres à DraftMaster
+//  - Statistiques publiées avec l'application (public/data, reprises du Coach LoL, mises à jour ici) :
+//      data/builds.json   : parties Challenger / GM / Master (EUW + Corée) : WR, builds, duos, adversaires (tools/collect.mjs)
+//      data/counters.json : duels par lane (Lolalytics, Émeraude+) (tools/counters-build.mjs)
+//      data/meta.json     : tiers support, profils, listes engage / frontline / assassins, timers (à la main)
+//  - data/combos.json, data/best-drafts.json, data/patch-notes.json
 // Ce module est pur (pas de DOM au chargement) : il sert aussi aux scripts Node de tools/.
 // ============================================================
 
 export const DD = 'https://ddragon.leagueoflegends.com';
-export const COACH_BASE_DEFAULT = 'https://nanileb.github.io/lol-support-coach/';
+// Relais Riot (worker/ de ce dépôt, déployé sur Cloudflare) : garde la clé Riot
 export const RELAY_DEFAULT = 'https://lol-support-coach.62z7h87vzm.workers.dev';
 
 export const ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
@@ -26,9 +26,9 @@ export const DATA = {
   version: null,   // version Data Dragon (ex. 16.22.1)
   items: {},       // id objet -> { name, tags, gold, grp }
   runes: {},       // id rune / style -> nom
-  builds: null,    // builds.json du coach
-  cnt: null,       // counters.json du coach
-  meta: null,      // meta.json du coach
+  builds: null,    // data/builds.json
+  cnt: null,       // data/counters.json
+  meta: null,      // data/meta.json
   combos: {},      // championId -> combos (export Base44)
   rev: 0,          // incrémenté à chaque nouvelle donnée (pour les useMemo)
 };

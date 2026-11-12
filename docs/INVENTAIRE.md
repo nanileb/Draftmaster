@@ -9,7 +9,7 @@ Contenu de ce dossier :
 | `app/` | La nouvelle application (React + Vite + Tailwind, sans Base44). Voir `app/README.md`. |
 | `base44-original/` | Copie complète du code Base44 (avec `HISTORIQUE-COMMITS.txt` : 203 commits, tous intitulés « File changes »). |
 | `data-base44/` | Export JSON des entités utiles (voir « Données récupérées »). |
-| `worker-patch/` | Patch compatible du relais Riot du coach (2 routes ajoutées) et sa note. |
+| `../worker/` | Relais Riot (repris du coach, voir `worker/README.md`). |
 | `captures/` | 33 captures Chromium en taille mobile (390 × 844, échelle 1). |
 
 ---
@@ -38,7 +38,7 @@ Contenu de ce dossier :
 | Fonction | Devient |
 |---|---|
 | `riotProxy` | Data Dragon lu directement par le navigateur (pas besoin de relais). |
-| `getMatchHistory` | `src/lib/riot.js` → relais du coach : `/matches`, puis `/match?lite=2` et `/rank` (routes du patch, voir `worker-patch/NOTE.md`). |
+| `getMatchHistory` | `src/lib/riot.js` → relais Riot (`worker/`) : `/matches`, puis `/match?lite=2` et `/rank`. |
 | `fetchChampionStats`, `fetchAllChampionStats` (tiers et taux générés par IA ou scrapés) | `championStat()` dans `gameData.js`, depuis `builds.json` et `meta.json`. |
 | `getChampionDetails` (counters, combos, ordre des sorts par IA) | `championDetails()` + sorts Data Dragon + `data/combos.json`. |
 | `preloadAllSpells` | Sorts chargés à la demande depuis Data Dragon fr_FR, avec cache. |

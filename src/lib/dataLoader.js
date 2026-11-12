@@ -1,7 +1,6 @@
 // Chargement des données côté navigateur (remplace riotProxy, fetchAllChampionStats, preloadAllSpells…)
 import { useEffect, useState } from 'react';
 import { DATA, DD, setData, fixIds } from '@/lib/gameData';
-import { getSettings } from '@/lib/localStore';
 
 const LOCAL = (p) => (import.meta.env.BASE_URL || '/') + p;
 
@@ -33,20 +32,19 @@ export async function loadDDragonExtras(version) {
   } catch (e) { console.warn('Objets / runes indisponibles', e.message); }
 }
 
-// Données partagées du coach (builds, counters, meta) : adresse publique, puis cache local
-export async function loadCoachData() {
-  const base = getSettings().coachBase.replace(/\/?$/, '/');
+// Statistiques (builds, counters, meta) : publiées avec l'application (public/data), puis cache local hors ligne
+export async function loadStatsData() {
   const out = {}; const errors = [];
   await Promise.all(['builds', 'counters', 'meta'].map(async (f) => {
     try {
-      out[f] = await getJSON(base + f + '.json', { cache: 'no-cache' });
+      out[f] = await getJSON(LOCAL('data/' + f + '.json'), { cache: 'no-cache' });
       cacheSet('dm_coach_' + f, out[f]);
     } catch (e) {
       const c = cacheGet('dm_coach_' + f);
       if (c) out[f] = c; else errors.push(f);
     }
   }));
-  setData({ builds: fixIds(out.builds || null), cnt: fixIds(out.counters || null), meta: out.meta || null, coachErrors: errors });
+  setData({ builds: fixIds(out.builds || null), cnt: fixIds(out.counters || null), meta: out.meta || null, statsErrors: errors });
   return errors;
 }
 
@@ -79,7 +77,7 @@ let started = null;
 export function useGameData(version) {
   const [rev, setRev] = useState(DATA.rev);
   useEffect(() => {
-    if (!started) started = Promise.all([loadCoachData(), loadLocalData()]);
+    if (!started) started = Promise.all([loadStatsData(), loadLocalData()]);
     let alive = true;
     started.then(() => { if (alive) setRev(DATA.rev); });
     return () => { alive = false; };

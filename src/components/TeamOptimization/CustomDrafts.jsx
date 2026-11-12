@@ -26,7 +26,7 @@ export default function CustomDrafts({ teamAssignment, champions, version }) {
       try {
         const byId = Object.fromEntries((champions || []).map(c => [c.id, c]));
         const res = computeCustomDrafts(teamAssignment, byId, 4);
-        if (!res.length) setError('Pas de draft possible : chaque joueur doit avoir au moins un champion à son poste (et les données du coach doivent être chargées).');
+        if (!res.length) setError('Pas de draft possible : chaque joueur doit avoir au moins un champion à son poste (et les statistiques doivent être chargées).');
         setDrafts(res);
       } catch (err) {
         setError('Erreur lors du calcul des drafts : ' + (err.message || 'erreur inconnue'));

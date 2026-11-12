@@ -1,17 +1,17 @@
 # Batch quotidien « dernier patch » : DraftMaster reste toujours au patch en cours.
-# 1. Vérifie seulement les numéros (patch Data Dragon + état des données du coach) : tools/patch-check.mjs.
+# 1. Vérifie seulement les numéros (patch Data Dragon + état de public/data : builds, counters, meta) : tools/patch-check.mjs.
 # 2. S'ils diffèrent de ceux enregistrés dans l'application, actualise toute la base publiée avec l'app :
 #    meilleures drafts (public/data/best-drafts.json) et nouveautés du patch (public/data/patch-notes.json),
 #    puis republie le site.
-# Champions, objets, runes, sorts, tier list, synergies et parties sont lus en direct par l'application
-# (Data Dragon, données du coach, relais Riot) : ils suivent le patch sans republication.
+# Champions, objets, runes et sorts (Data Dragon) et parties (relais Riot) sont lus en direct par l'application.
+# Tier list, builds et synergies (public/data/builds.json) viennent du batch collect.yml, qui lance ce batch après chaque collecte.
 # Aucune clé, aucun secret. Lancement à la main possible (Actions > Batch dernier patch > Run workflow).
 name: Batch dernier patch
 
 on:
   schedule:
-    - cron: '0 10 * * *'   # 10 h UTC : après la vérification du patch côté coach (4 h) et sa collecte
-    - cron: '0 20 * * *'   # 20 h UTC : rattrape une collecte du coach plus longue ou un patch sorti dans la journée
+    - cron: '0 10 * * *'   # 10 h UTC : nouveautés du patch dès que Data Dragon change (la collecte relance ce batch quand elle finit)
+    - cron: '0 20 * * *'   # 20 h UTC : rattrape un patch sorti dans la journée
     # Chaque lundi à 8 h heure de Paris : meilleures drafts recalculées même sans nouveau patch.
     # Le cron GitHub est en UTC : 6 h UTC en heure d'été, 7 h UTC en heure d'hiver ; l'étape « Lundi 8 h » garde le bon.
     - cron: '0 6 * * 1'
