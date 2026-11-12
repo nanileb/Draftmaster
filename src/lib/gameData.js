@@ -76,18 +76,23 @@ export const BUILD = (id, role) => (DATA.builds && DATA.builds.builds && DATA.bu
 export function counterDuel(me, opp, role) {
   const L = DATA.cnt && DATA.cnt.lanes && DATA.cnt.lanes[CLANE[role]]; if (!L || !me || !opp) return null;
   const a = L[me] && L[me].vs[opp], o = L[opp] && L[opp].vs[me];
-  const x = a && (!o || a[1] >= o[1]) ? [a[0], a[1]] : o ? [Math.round((100 - o[0]) * 100) / 100, o[1]] : null;
+  // On lit la ligne qui a le plus de parties ; à égalité, la même ligne des deux côtés (ordre alphabétique).
+  // Quand c'est celle de l'adversaire, on la retourne ET on la compare à sa moyenne retournée (recette logique P1-1) :
+  // sinon l'écart à la moyenne était compté deux fois.
+  const own = !!a && (!o || a[1] > o[1] || (a[1] === o[1] && me < opp));
+  const x = own ? [a[0], a[1]] : o ? [Math.round((100 - o[0]) * 100) / 100, o[1]] : null;
   if (!x) return null;
-  const avg = L[me] ? L[me].avg : o && L[opp] ? 100 - L[opp].avg : 50;
-  return { wr: x[0], n: x[1], avg: Math.round(avg * 10) / 10 };
+  const avg = own ? L[me].avg : L[opp] ? 100 - L[opp].avg : 50;
+  return { wr: x[0], n: x[1], avg: Math.round(avg * 100) / 100 };
 }
 // Résultat d'un duel exploitable : au moins 20 parties (recette 2, point 2)
 export function duelResult(me, opp, role) {
   const cd = counterDuel(me, opp, role);
-  if (cd && cd.n >= 20) return { wr: Math.round(cd.wr), n: cd.n, avg: cd.avg, source: 'counters' };
+  // wr arrondi pour l'affichage, raw pour juger le duel (recette logique P2-6 : verdict symétrique)
+  if (cd && cd.n >= 20) return { wr: Math.round(cd.wr), raw: cd.wr, n: cd.n, avg: cd.avg, source: 'counters' };
   // à défaut : adversaire direct dans builds.json (parties des meilleurs joueurs)
   const b = BUILD(me, role), e = b && (b.opp || []).find(x => x[0] === opp && x[1] >= 20);
-  if (e) return { wr: Math.round(e[2]), n: e[1], avg: b.wr, source: 'builds' };
+  if (e) return { wr: Math.round(e[2]), raw: e[2], n: e[1], avg: b.wr, source: 'builds' };
   return { wr: null, n: cd ? cd.n : 0 };
 }
 
@@ -95,8 +100,11 @@ export function duelResult(me, opp, role) {
 export const earlyOf = id => { const p = meta().adcs[id] || meta().supports[id]; return p && p.early != null ? p.early : null; };
 
 // Type de dégâts réel (corrections 6 et C1) : tanks magiques d'abord, puis part d'objets AP / AD achetés
-const MAGIC_TANKS = ['Galio', 'Maokai', 'Amumu', 'Zac', 'Malphite', 'Sejuani', 'Rell', 'Nautilus', 'Leona', 'Alistar', 'Rammus', 'Nunu', 'Gragas', 'Chogath', 'Braum', 'Taric', 'Poppy', 'Ornn', 'TahmKench', 'Skarner', 'Zyra'];
-const PHYS_TANKS = ['Sion', 'KSante', 'Thresh', 'Blitzcrank', 'Pyke'];
+// Ces listes ne servent qu'à isAP (dégâts réellement infligés par le kit) : un tank qui n'achète que de la défense
+// n'a pas de part AP / AD exploitable dans ses achats. Recette logique P2-5 : Poppy inflige des dégâts physiques,
+// Thresh et Blitzcrank des dégâts magiques ; Skarner (mixte) reste où il était.
+const MAGIC_TANKS = ['Galio', 'Maokai', 'Amumu', 'Zac', 'Malphite', 'Sejuani', 'Rell', 'Nautilus', 'Leona', 'Alistar', 'Rammus', 'Nunu', 'Gragas', 'Chogath', 'Braum', 'Taric', 'Ornn', 'TahmKench', 'Skarner', 'Zyra', 'Thresh', 'Blitzcrank'];
+const PHYS_TANKS = ['Sion', 'KSante', 'Poppy', 'Pyke'];
 export function dmgShare(id, role) {
   const all = (DATA.builds && DATA.builds.builds) || {};
   const keys = role && all[id + '|' + POS[role]] ? [id + '|' + POS[role]] : Object.keys(all).filter(k => k.split('|')[0] === id);
@@ -115,7 +123,13 @@ export function isAP(id, role) {
   const i = (champ(id) && champ(id).info) || {}; return (i.magic || 0) > (i.attack || 0);
 }
 export const inList = (list, id) => (meta()[list] || []).includes(id);
-export const isEngager = id => inList('engagers', id) || (meta().supports[id] && meta().supports[id].engage >= 3);
+// Engage = champion qui ouvre le combat lui-même. La liste « engagers » de meta.json (partagée avec le coach)
+// mélange engage et contrôle de zone : DraftMaster sépare les deux (recette logique P2-8).
+export const ZONE_CONTROL = ['Cassiopeia', 'Zyra', 'Aurora', 'Seraphine', 'Orianna', 'Yasuo', 'Lillia', 'Anivia', 'Taliyah', 'Viktor', 'Velkoz', 'Xerath', 'Lux', 'Karthus', 'Hwei', 'Azir', 'Mel', 'Swain', 'Ziggs', 'Heimerdinger', 'Bard'];
+export const isEngager = id => !ZONE_CONTROL.includes(id) && (inList('engagers', id) || (meta().supports[id] && meta().supports[id].engage >= 3));
+export const isZoneControl = id => ZONE_CONTROL.includes(id) && !isEngager(id);
+// Contrôle utile (gank, menaces de contrôles pour les objets) : engage ou contrôle de zone
+export const hasCC = id => isEngager(id) || ZONE_CONTROL.includes(id);
 export const isFront = id => inList('frontline', id) || tags(id).includes('Tank');
 export const isAssassin = id => inList('assassins', id);
 export const isHealer = id => inList('healers', id);
@@ -271,7 +285,8 @@ export function teamEstimate(ally = {}, enemy = {}) {
   // duo bot allié / adverse
   const duo = (adc, sup) => { const b = adc && sup && BUILD(adc, 'ADC'); const e = b && ((b.duo || []).find(x => x[0] === sup && x[1] >= 20) || (b.with || []).find(x => x[0] === sup && x[1] >= 20)); return e ? clamp(shrink(e[2], e[1], 100, b.wr) - b.wr, -3, 3) : 0; };
   d += duo(ally.ADC, ally.SUPPORT) - duo(enemy.ADC, enemy.SUPPORT);
-  return { win: clamp(Math.round(50 + d), 42, 58), delta: d, detail };
+  // Arrondi symétrique : victoire(A contre B) + victoire(B contre A) = 100 exactement (recette logique P1-1)
+  return { win: clamp(50 + Math.sign(d) * Math.round(Math.abs(d)), 42, 58), delta: d, detail };
 }
 
 // ------------------------------------------------------------
@@ -284,6 +299,7 @@ export function tierOf(sw, pr) {
   if (sw >= 49.3) return 'B';
   return 'C';
 }
+export const TIER_DATA_MIN = 200;
 export function championStat(id, role) {
   const b = BUILD(id, role); const games = (DATA.builds && DATA.builds.games) || 0;
   const M = meta();
@@ -293,45 +309,72 @@ export function championStat(id, role) {
   }
   const pr = games ? Math.round(b.n / games * 1000) / 10 : null;
   const sw = shrink(b.wr, b.n, 300);
-  let tier = tierOf(sw, pr || 0);
-  if (role === 'SUPPORT' && M.tiers[id]) tier = M.tiers[id] === 'D' ? 'C' : M.tiers[id];
-  return { championId: id, role, tier, winRate: b.wr, pickRate: pr, games: b.n, adjusted: sw, source: 'builds' };
+  let tier = tierOf(sw, pr || 0), source = 'builds';
+  // Recette logique P2-2 : le tier des données prime dès 200 parties ; le tier écrit de meta.json seulement à défaut
+  if (role === 'SUPPORT' && M.tiers[id] && b.n < TIER_DATA_MIN) { tier = M.tiers[id] === 'D' ? 'C' : M.tiers[id]; source = 'meta'; }
+  return { championId: id, role, tier, winRate: b.wr, pickRate: pr, games: b.n, adjusted: sw, source };
 }
 
 // ------------------------------------------------------------
 // Fiche champion (remplace la fonction Base44 getChampionDetails, qui appelait une IA)
 // ------------------------------------------------------------
-export function skillOrderFrom(b) {
+// Exceptions à l'ordre de montée standard (Q/W/E 5 rangs, R aux niveaux 6, 11, 16), vérifiées contre les maxrank
+// de Data Dragon 16.22.1 (championFull.json) : Jayce 6/6/6/1, Elise / Nidalee / Karma 5/5/5/4, Udyr 6/6/6/6,
+// Aphelios 6/6/6/3 (sorts montés automatiquement). Recette logique P3.
+export const SKILL_RULES = {
+  Jayce: { max: { Q: 6, W: 6, E: 6, R: 1 }, rAt: [], note: 'Jayce a son changement de forme (R) dès le niveau 1, sans le monter : chaque point va dans Q, W ou E (6 rangs chacun).' },
+  Elise: { note: 'Forme arachnéenne (R) disponible dès le niveau 1, puis un rang de plus aux niveaux 6, 11 et 16.' },
+  Nidalee: { note: 'Aspect du Couguar (R) disponible dès le niveau 1, puis un rang de plus aux niveaux 6, 11 et 16.' },
+  Karma: { note: 'Mantra (R) disponible dès le niveau 1, puis un rang de plus aux niveaux 6, 11 et 16.' },
+  Udyr: { max: { Q: 6, W: 6, E: 6, R: 6 }, rAt: [], all: true, note: 'Udyr n\'a pas d\'ultime : ses quatre postures (Q, W, E, R) ont 6 rangs et se montent comme des sorts de base.' },
+  Aphelios: { stats: true, note: 'Aphelios ne monte pas ses sorts (ils progressent seuls avec le niveau) : ses points vont dans des bonus de stats (+), sauf l\'ultime aux niveaux 6, 11 et 16.' },
+};
+export function skillOrderFrom(b, id) {
   // b.skills = priorité de montée (ex. "QWE"), b.early = 3 premiers niveaux (ex. "QWE")
   if (!b || !b.skills) return [];
-  const prio = b.skills.split(''), first = (b.early || b.skills).split('').slice(0, 3);
+  const rule = SKILL_RULES[id] || {};
+  if (rule.stats) return Array.from({ length: 18 }, (_, i) => [6, 11, 16].includes(i + 1) ? 'R' : '+');
+  const max = { Q: 5, W: 5, E: 5, R: 3, ...(rule.max || {}) }, rAt = rule.rAt || [6, 11, 16];
+  const prio = b.skills.split('').filter(x => max[x] != null);
+  if (rule.all) ['Q', 'W', 'E', 'R'].forEach(x => { if (!prio.includes(x)) prio.push(x); });
+  const first = (b.early || b.skills).split('').slice(0, 3);
   const lv = { Q: 0, W: 0, E: 0, R: 0 }, out = [];
+  const room = (x, L) => lv[x] < max[x] && (x === 'R' && !rule.all ? true : lv[x] < Math.ceil(L / 2));
   for (let L = 1; L <= 18; L++) {
     let k;
-    if ([6, 11, 16].includes(L)) k = 'R';
-    else if (L <= 3 && first[L - 1]) k = first[L - 1];
-    else k = prio.find(x => lv[x] < 5 && lv[x] < Math.ceil(L / 2));
-    if (!k) k = prio.find(x => lv[x] < 5) || 'Q';
+    if (rAt.includes(L)) k = 'R';
+    else if (L <= 3 && first[L - 1] && room(first[L - 1], L)) k = first[L - 1];
+    else k = prio.find(x => (x !== 'R' || rule.all) && room(x, L));
+    if (!k) k = prio.find(x => (x !== 'R' || rule.all) && lv[x] < max[x]) || 'Q';
     lv[k]++; out.push(k);
   }
   return out;
 }
+const fmtPct = v => String(Math.round(v * 10) / 10).replace('.', ',') + ' %';
+const fmtGap = v => (v >= 0 ? '+' : '−') + String(Math.abs(Math.round(v * 10) / 10)).replace('.', ',') + ' pt' + (Math.abs(v) >= 2 ? 's' : '');
 export function championDetails(id, role) {
   const b = BUILD(id, role);
   const L = DATA.cnt && DATA.cnt.lanes && DATA.cnt.lanes[CLANE[role]];
   const c = L && L[id];
-  let counters = [], counteredBy = [], counterLabels = {}, counterTips = null;
+  let counters = [], counteredBy = [], counterLabels = {}, counterGaps = {}, counterTips = null;
   if (c) {
     const rows = Object.entries(c.vs).filter(([, x]) => x[1] >= 100).map(([o, x]) => [o, x[0], x[1]]);
-    counteredBy = rows.filter(x => x[1] <= c.avg - 2).sort((a, b2) => a[1] - b2[1]).slice(0, 5).map(x => { counterLabels[x[0]] = Math.round(x[1]) + ' %'; return x[0]; });
-    counters = rows.filter(x => x[1] >= c.avg + 2).sort((a, b2) => b2[1] - a[1]).slice(0, 5).map(x => { counterLabels[x[0]] = Math.round(x[1]) + ' %'; return x[0]; });
-    counterTips = `Taux de victoire de ${cname(id)} contre chaque adversaire direct (${DATA.cnt.source}, ${DATA.cnt.rank}, patch ${DATA.cnt.patch}). Moyenne du champion : ${c.avg} %. Seuls les duels d'au moins 100 parties sont affichés.`;
+    // Recette logique P2-3 : « difficile contre » = sous la moyenne du champion ET sous 50 % ; « fort contre » = au-dessus
+    // de sa moyenne ET au-dessus de 50 %. L'écart à sa moyenne est affiché sous le %.
+    const lab = x => { counterLabels[x[0]] = fmtPct(x[1]); counterGaps[x[0]] = fmtGap(x[1] - c.avg); return x[0]; };
+    const r1 = v => Math.round(v * 10) / 10;
+    counteredBy = rows.filter(x => x[1] <= c.avg - 2 && r1(x[1]) < 50).sort((a, b2) => a[1] - b2[1]).slice(0, 5).map(lab);
+    counters = rows.filter(x => x[1] >= c.avg + 2 && r1(x[1]) > 50).sort((a, b2) => b2[1] - a[1]).slice(0, 5).map(lab);
+    counterTips = `Taux de victoire de ${cname(id)} contre chaque adversaire direct (${DATA.cnt.source}, ${DATA.cnt.rank}, patch ${DATA.cnt.patch}). Moyenne du champion : ${c.avg} % ; sous chaque %, l'écart à cette moyenne. Seuls les duels d'au moins 100 parties, sous 50 % (difficile) ou au-dessus (fort), sont affichés.`;
   } else if (b && b.opp && b.opp.length) {
     const rows = b.opp.filter(x => x[1] >= 20);
-    counteredBy = rows.filter(x => x[2] <= 45).sort((a, b2) => a[2] - b2[2]).slice(0, 5).map(x => { counterLabels[x[0]] = x[2] + ' %'; return x[0]; });
-    counters = rows.filter(x => x[2] >= 55).sort((a, b2) => b2[2] - a[2]).slice(0, 5).map(x => { counterLabels[x[0]] = x[2] + ' %'; return x[0]; });
-    counterTips = `Duel absent de la base de counters : taux tirés des parties Challenger / GM / Master (au moins 20 parties par duel).`;
+    const lab = x => { counterLabels[x[0]] = fmtPct(x[2]); counterGaps[x[0]] = fmtGap(x[2] - b.wr); return x[0]; };
+    counteredBy = rows.filter(x => x[2] <= 45).sort((a, b2) => a[2] - b2[2]).slice(0, 5).map(lab);
+    counters = rows.filter(x => x[2] >= 55).sort((a, b2) => b2[2] - a[2]).slice(0, 5).map(lab);
+    counterTips = `Duel absent de la base de counters (${DATA.cnt ? DATA.cnt.source + ', patch ' + DATA.cnt.patch : 'non chargée'}) : taux tirés des parties Challenger / GM / Master (au moins 20 parties par duel, sous 45 % ou au-dessus de 55 %). Moyenne du champion : ${b.wr} %.`;
   }
+  // Recette logique P3 : pas de duel mesuré → on le dit, sans inventer de chiffre
+  if (!counters.length && !counteredBy.length && !counterTips) counterTips = `Aucun duel mesuré pour ${cname(id)} à ce poste : absent de la base de counters (${DATA.cnt ? DATA.cnt.source + ', patch ' + DATA.cnt.patch : 'non chargée'}) et moins de 20 parties par adversaire chez les meilleurs joueurs. Les recommandations utilisent alors une estimation par profil, signalée comme telle.`;
   let synergies = [], synergyTips = null;
   if (b && (role === 'ADC' || role === 'SUPPORT')) {
     const partner = role === 'ADC' ? 'SUPPORT' : 'ADC';
@@ -341,9 +384,9 @@ export function championDetails(id, role) {
     synergyTips = `Taux de victoire du duo chez les meilleurs joueurs (parties entre parenthèses, au moins 20).` + (pairs.length ? ` Duos reconnus : ${pairs.join(', ')}.` : '');
   }
   return {
-    skillOrder: skillOrderFrom(b),
+    skillOrder: skillOrderFrom(b, id), skillNote: b && b.skills && SKILL_RULES[id] ? SKILL_RULES[id].note : null,
     combos: (DATA.combos[id] || []),
-    counters, counteredBy, counterLabels, counterTips, synergies, synergyTips,
+    counters, counteredBy, counterLabels, counterGaps, counterTips, synergies, synergyTips,
     spells: b ? b.spells : null, runes: b ? b.runes : null, games: b ? b.n : 0,
   };
 }

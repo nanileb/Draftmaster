@@ -86,7 +86,7 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
     return map;
   }, [champions, dataRev]);
   const sourceNote = DATA.builds
-    ? `Tiers et taux de victoire : parties Challenger / GM / Master (patch ${DATA.builds.patch || '?'}, ${DATA.builds.games || '?'} parties), lissés vers 50 % quand l'échantillon est petit. Supports : tier de la méta du coach.`
+    ? `Tiers et taux de victoire : parties Challenger / GM / Master (patch ${DATA.builds.patch || '?'}, ${DATA.builds.games || '?'} parties), lissés vers 50 % quand l'échantillon est petit. Supports : tier calculé sur les parties dès 200 parties, sinon tier de la méta du coach.`
     : 'Données du coach indisponibles : aucun tier affiché.';
 
   // Build champion list for current role — ALL champions, stats optional

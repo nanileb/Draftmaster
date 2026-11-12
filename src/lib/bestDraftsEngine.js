@@ -5,7 +5,7 @@
 // paires d'alliés jouées ensemble (builds.json), puis notées avec le score de draft de l'app.
 // Utilisé dans le navigateur ET par tools/best-drafts.mjs (imports relatifs, pas de DOM).
 // ============================================================
-import { DATA, ROLES, BUILD, meta, cname, tags, isAP, isEngager, isFront, isAssassin, shrink, clamp, blindKind } from './gameData.js';
+import { DATA, ROLES, BUILD, meta, cname, tags, isAP, isEngager, isZoneControl, isFront, isAssassin, shrink, clamp, blindKind } from './gameData.js';
 import { calculateDraftScore, detectSynergies, getWinCondition } from './championEngine.js';
 
 const ROLE_FR = { TOP: 'Top', JUNGLE: 'Jungle', MID: 'Mid', ADC: 'ADC', SUPPORT: 'Support' };
@@ -99,11 +99,14 @@ function beamSearch(candidates, style, exclude = [], width = 60, maxCommon = 3) 
   return beam.filter(st => !exclude.some(ex => ROLES.filter(r => ex[r] === st.team[r]).length > maxCommon)).map(st => st.team);
 }
 
-function candidatesFor(style, perRole = 12) {
+// Recette logique P3 : seuls les choix assez joués à ce poste entrent dans les meilleures drafts
+// (avant : 40 parties, d'où Lissandra top à 41 parties, Rengar top à 44, Kog'Maw top à 51)
+export const BEST_DRAFT_MIN_GAMES = 100;
+function candidatesFor(style, perRole = 12, minGames = BEST_DRAFT_MIN_GAMES) {
   const all = (DATA.builds && DATA.builds.builds) || {};
   const out = {};
   ROLES.forEach(r => {
-    const ids = Object.keys(all).filter(k => k.endsWith('|' + ({ TOP: 'TOP', JUNGLE: 'JUNGLE', MID: 'MIDDLE', ADC: 'BOTTOM', SUPPORT: 'UTILITY' })[r]) && all[k].n >= 40).map(k => k.split('|')[0]).filter(id => DATA.champs[id] || !Object.keys(DATA.champs).length);
+    const ids = Object.keys(all).filter(k => k.endsWith('|' + ({ TOP: 'TOP', JUNGLE: 'JUNGLE', MID: 'MIDDLE', ADC: 'BOTTOM', SUPPORT: 'UTILITY' })[r]) && all[k].n >= minGames).map(k => k.split('|')[0]).filter(id => DATA.champs[id] || !Object.keys(DATA.champs).length);
     out[r] = ids.map(id => [id, champValue(id, r) + (style ? style.fit(id, r) * 0.8 : 0)]).sort((a, b) => b[1] - a[1]).slice(0, perRole).map(x => x[0]);
   });
   return out;
@@ -122,6 +125,9 @@ export function describeTeam(team, style, championsById) {
   const strengths = [], weaknesses = [];
   const eng = ids.filter(isEngager), fr = ids.filter(isFront);
   if (eng.length >= 2) strengths.push(`Plusieurs engages : ${eng.map(cname).join(', ')}`); else if (eng.length === 1) strengths.push(`Engage fiable : ${cname(eng[0])}`);
+  // Recette logique P2-8 : le contrôle de zone (Orianna, Cassiopeia…) n'est pas un engage
+  const zone = ids.filter(isZoneControl);
+  if (zone.length && eng.length < 2) strengths.push(`Contrôle de zone : ${zone.map(cname).join(', ')}`);
   if (fr.length >= 2) strengths.push(`Frontline solide : ${fr.map(cname).join(', ')}`);
   if (S.ap >= 2 && S.ad >= 2) strengths.push('Dégâts mixtes : difficile à itemiser pour l\'adversaire');
   const best = ROLES.map(r => [r, team[r], BUILD(team[r], r)]).filter(x => x[2]).sort((a, b) => shrink(b[2].wr, b[2].n, 300) - shrink(a[2].wr, a[2].n, 300))[0];
@@ -146,13 +152,13 @@ export function describeTeam(team, style, championsById) {
 }
 
 // 10 meilleures drafts du patch (une par style, puis des variantes)
-export function computeBestDrafts(championsById, count = 10, width = 60) {
+export function computeBestDrafts(championsById, count = 10, width = 60, minGames = BEST_DRAFT_MIN_GAMES) {
   if (!DATA.builds || !DATA.builds.builds) return [];
   const out = [], teams = [];
   const order = [...STYLES, ...STYLES.filter(s => s.key !== 'balanced')];
   for (const style of order) {
     if (out.length >= count) break;
-    const res = beamSearch(candidatesFor(style, width >= 60 ? 12 : 9), style, teams, width);
+    const res = beamSearch(candidatesFor(style, width >= 60 ? 12 : 9, minGames), style, teams, width);
     if (!res.length) continue;
     teams.push(res[0]);
     out.push(describeTeam(res[0], style, championsById));

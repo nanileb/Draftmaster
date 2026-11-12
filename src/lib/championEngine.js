@@ -5,7 +5,7 @@
 // Les règles par classe d'origine ne servent plus qu'à défaut de données, et le disent.
 // ============================================================
 import {
-  DATA, ROLES as R5, BUILD, meta, cname, tags, isAP, isEngager, isFront, isAssassin, isHealer,
+  DATA, ROLES as R5, BUILD, meta, cname, tags, isAP, isEngager, isFront, isAssassin, isHealer, hasCC,
   dataRoles, scoreChampion, teamEstimate, duelResult, earlyOf, iname, itemExists, clamp, fmtTime, dmgShare,
 } from './gameData.js';
 
@@ -138,32 +138,37 @@ export function getWinCondition(synergies) {
 // ------------------------------------------------------------
 const toIds = byRole => { const o = {}; R5.forEach(r => { o[r] = byRole && byRole[r] ? (byRole[r].id || byRole[r]) : null; }); return o; };
 
+// Recette logique P2-1 : bonus de structure réduits (au plus +21, contre +53 avant), victoire estimée plus lourde (±8 pts = ±24 pts de score).
+// Une compo moyenne (structure correcte, victoire estimée ~50 %) tombe vers 60-70, et « Excellente » (≥ 80)
+// n'est possible qu'avec une victoire estimée d'au moins 50 %.
+export const DRAFT_SCORE = { base: 50, winWeight: 3, excellent: 80, good: 60 };
 export function calculateDraftScore(allyTeam, enemyTeam, allyByRole, enemyByRole) {
   if (!allyTeam || allyTeam.length === 0) return 50;
-  let score = 50;
+  let score = DRAFT_SCORE.base;
   const ids = allyTeam.map(c => c.id);
   const ap = ids.filter(id => isAP(id)).length, ad = ids.length - ap;
-  if (ap >= 1 && ad >= 1) score += 10;
-  if (allyTeam.length >= 3 && (ap === 0 || ad === 0)) score -= 8;
+  if (ap >= 1 && ad >= 1) score += 5;
+  if (allyTeam.length >= 3 && (ap === 0 || ad === 0)) score -= 6;
   const eng = ids.filter(isEngager).length;
-  if (eng >= 1) score += 8; if (eng >= 2) score += 5;
-  if (ids.some(isFront)) score += 5;
-  if (allyTeam.some(c => c.class === 'Enchanter') || ids.some(id => (meta().supports[id] || {}).peel >= 3)) score += 6;
-  if (allyTeam.filter(c => c.powerSpike === 'late').length >= 2) score += 5;
+  if (eng >= 1) score += 4; else if (allyTeam.length >= 4) score -= 3;
+  if (ids.some(isFront)) score += 4; else if (allyTeam.length >= 4) score -= 3;
+  if (allyTeam.some(c => c.class === 'Enchanter') || ids.some(id => (meta().supports[id] || {}).peel >= 3)) score += 3;
+  if (allyTeam.filter(c => c.powerSpike === 'late').length >= 2) score += 1;
   const avgDifficulty = allyTeam.reduce((s, c) => s + (c.difficulty || 5), 0) / allyTeam.length;
-  if (avgDifficulty > 7) score -= 8; else if (avgDifficulty < 4) score += 5;
-  score += Math.min(3, detectSynergies(allyTeam).length) * 3;
-  // Avantage mesuré (taux de victoire réels, duels de lane) : ±8 points de victoire estimée = ±12 points de score
+  if (avgDifficulty > 7) score -= 4; else if (avgDifficulty < 4) score += 2;
+  score += Math.min(2, detectSynergies(allyTeam).length) * 1;
+  // Avantage mesuré (taux de victoire réels, duels de lane, duo bot)
   if (allyByRole) {
     const est = teamEstimate(toIds(allyByRole), toIds(enemyByRole));
-    score += clamp(est.delta, -8, 8) * 1.5;
+    score += clamp(est.delta, -8, 8) * DRAFT_SCORE.winWeight;
+    if (est.win < 50) score = Math.min(score, DRAFT_SCORE.excellent - 1);
   }
   return Math.max(10, Math.min(100, Math.round(score)));
 }
 
 export function getDraftScoreLabel(score) {
-  if (score >= 80) return { label: 'Excellente', color: 'text-green-win' };
-  if (score >= 60) return { label: 'Équilibrée', color: 'text-gold' };
+  if (score >= DRAFT_SCORE.excellent) return { label: 'Excellente', color: 'text-green-win' };
+  if (score >= DRAFT_SCORE.good) return { label: 'Équilibrée', color: 'text-gold' };
   return { label: 'Risquée', color: 'text-red-lose' };
 }
 
@@ -212,18 +217,22 @@ export function getRecommendations(role, allChampions, allyByRole, enemyByRole, 
   const pool = hasData ? scored.filter(c => c.est || c.isInPool) : scored;
   const list = pool.length ? pool : scored;
   const best = list[0] || null;
-  const alternatives = list.slice(1, 5);
   const risky = scored.filter(c => {
     if (c.blind) return true;
     const duel = (c.parts || []).find(p => /\(duel\)/.test(p[1]));
     if (duel && duel[0] <= -2) return true;
     return c.recommendScore <= 46 && (c.isInPool || c.est);
   }).filter(c => c.id !== best?.id).slice(0, 3).map(c => ({ ...c, riskReason: c.blind ? 'Risque de contre-pick : ton adversaire choisit après toi' : riskText(c) }));
+  // Recette logique P2-4 : un champion « à éviter » n'est jamais proposé en alternative
+  const avoid = new Set(risky.map(c => c.id));
+  const alternatives = list.slice(1).filter(c => !avoid.has(c.id)).slice(0, 4);
   return { best, alternatives, risky };
 }
 function shortReason(txt, v) {
-  const m = txt.match(/^(\d+(?:[.,]\d+)?) % contre (.+?) \(duel\)/);
-  if (m) return v > 0 ? `gagne contre ${m[2]} (${m[1]} %)` : `⚠️ difficile contre ${m[2]} (${m[1]} %)`;
+  const m = txt.match(/^(\d+(?:[.,]\d+)?) % contre (.+?) \(duel\)(?: au lieu de (\d+(?:[.,]\d+)?) %)?/);
+  // Le % seul peut tromper (52 % « difficile » pour un champion à 55 % de moyenne) : on donne aussi sa moyenne
+  const vs = m && m[3] && m[3] !== m[1] ? `${m[1]} % au lieu de ${m[3]} %` : m && `${m[1]} %`;
+  if (m) return v > 0 ? `gagne contre ${m[2]} (${vs})` : `⚠️ difficile contre ${m[2]} (${vs})`;
   const w = txt.match(/^(\d+(?:[.,]\d+)?) % avec (.+?) au lieu/);
   if (w) return v > 0 ? `bon duo avec ${w[2]}` : `moins bon avec ${w[2]}`;
   return txt.replace(/ \(.*$/, '');
@@ -268,12 +277,17 @@ export function analyzeLaneMatchup(allyChamp, enemyChamp, role) {
   const r = role || allyChamp.roles?.[0] || 'MID';
   const d = duelResult(allyChamp.id, enemyChamp.id, r);
   const em = earlyOf(allyChamp.id), eo = earlyOf(enemyChamp.id);
-  const src = d.source === 'counters' ? `${DATA.cnt.source}, ${DATA.cnt.rank}` : 'Challenger / GM / Master';
+  // Patchs affichés séparément quand counters.json et builds.json ne sont pas au même patch (recette logique P3)
+  const cntPatch = DATA.cnt && DATA.cnt.patch && DATA.builds && DATA.cnt.patch !== DATA.builds.patch ? `, patch ${DATA.cnt.patch}` : '';
+  const src = d.source === 'counters' ? `${DATA.cnt.source}, ${DATA.cnt.rank}${cntPatch}` : `Challenger / GM / Master${DATA.builds && DATA.builds.patch ? ', patch ' + DATA.builds.patch : ''}`;
   if (d.wr != null) {
-    const adv = d.wr >= 53 ? 'ally' : d.wr <= 47 ? 'enemy' : 'neutral';
-    const reason = adv === 'ally' ? `Duel favorable : ${d.wr} % de victoires (${d.n} parties, ${src})`
-      : adv === 'enemy' ? `Duel difficile : ${d.wr} % de victoires (${d.n} parties, ${src})`
-      : `Duel équilibré : ${d.wr} % de victoires (${d.n} parties, ${src})`;
+    // Recette logique P2-6 : verdict sur le % non arrondi, seuils symétriques (A favorable ⇔ B difficile)
+    const raw = d.raw != null ? d.raw : d.wr;
+    const adv = raw >= 53 ? 'ally' : raw <= 47 ? 'enemy' : 'neutral';
+    const pct = String(Math.round(raw * 10) / 10).replace('.', ',');
+    const reason = adv === 'ally' ? `Duel favorable : ${pct} % de victoires (${d.n} parties, ${src})`
+      : adv === 'enemy' ? `Duel difficile : ${pct} % de victoires (${d.n} parties, ${src})`
+      : `Duel équilibré : ${pct} % de victoires (${d.n} parties, ${src})`;
     // Le % vaut pour toute la partie : les niveaux 1-3 ne viennent que des profils (C6)
     let timing = 'Sur l\'ensemble de la partie';
     let advice;
@@ -286,7 +300,7 @@ export function analyzeLaneMatchup(allyChamp, enemyChamp, role) {
       advice = 'Farm près de ta tour, échange seulement quand ses sorts clés sont en recharge et appelle ton jungler';
       if (em != null && eo != null && em > eo) { advice = 'Difficile sur la durée, mais tu gagnes les premiers niveaux : prends l\'avantage tôt puis joue plus prudemment'; timing = 'Niveaux 1 à 3'; }
     } else advice = 'Échange quand ses sorts clés sont en recharge, avance seulement avec de la vision';
-    return { advantage: adv, reason, timing, advice, wr: d.wr, n: d.n, measured: true };
+    return { advantage: adv, reason, timing, advice, wr: Math.round(raw * 10) / 10, n: d.n, measured: true };
   }
   const key = `${allyChamp.class}-${enemyChamp.class}`, rev = `${enemyChamp.class}-${allyChamp.class}`;
   let m = CLASS_MATRIX[key];
@@ -319,18 +333,24 @@ function enemyFlags(enIds) {
   const ass = enIds.filter(isAssassin);
   const assAP = ass.filter(id => isAP(id)).length, assAD = ass.length - assAP;
   return {
-    n: enIds.length, ap, ad, heal: enIds.filter(isHealer).length, tank: enIds.filter(isFront).length, cc: enIds.filter(isEngager).length,
+    n: enIds.length, ap, ad, heal: enIds.filter(isHealer).length, tank: enIds.filter(isFront).length, cc: enIds.filter(hasCC).length,
     adBurst: ass.length && assAD >= assAP, apBurst: ass.length && assAP >= assAD,
   };
 }
-function fitsThreat(item, F) {
+// Objets qui n'ont de sens que contre une menace précise : jamais dans le cœur sans cette menace
+function fitsCore(item, F) {
   if (ANTIHEAL.includes(item) && !(F.heal >= 1)) return false;
   if (item === '3222' && !(F.cc >= 3)) return false;
+  return true;
+}
+function fitsThreat(item, F) {
+  if (!fitsCore(item, F)) return false;
   if (hasMR(item) && !hasArmor(item) && !isOffAP(item) && !isOffAD(item) && F.ap < 2 && !F.apBurst) return false;
   if (hasArmor(item) && !hasMR(item) && !isOffAP(item) && !isOffAD(item) && F.ad < 2 && !F.adBurst) return false;
   return true;
 }
 
+export const SITUATIONAL_MAX_SHARE = 25;
 export function recommendedBuild(champion, role, enemyTeam = [], enemyLaner = null) {
   const b = BUILD(champion.id, role);
   if (!b) return null;
@@ -348,14 +368,24 @@ export function recommendedBuild(champion, role, enemyTeam = [], enemyLaner = nu
   const core = [];
   const coreSrc = (b.core && b.core[0] && b.core[0][0]) || ((b.first && b.first[0]) ? [b.first[0][0]] : []);
   coreSrc.map(String).forEach(id => { if (can(id)) core.push(take(id)); });
-  const offAP = core.some(isOffAP), offAD = core.some(isOffAD);
-  const sameVariant = id => (offAP && !offAD && isOffAD(id) && !isOffAP(id)) || (offAD && !offAP && isOffAP(id) && !isOffAD(id)) ? false : true;
-  const situational = new Set(Object.values(b.vs || {}).flat().map(x => String(x[0])));
-  // Compléter jusqu'à 4 objets avec le pool, sans objet de situation (correction 3)
-  for (const [id] of (b.pool || [])) {
+  // Recette logique P2-7 : un objet hybride (Guinsoo, Aube et crépuscule…) ne fixe pas la variante AP / AD
+  const pureAP = id => isOffAP(id) && !isOffAD(id), pureAD = id => isOffAD(id) && !isOffAP(id);
+  const offAP = core.some(pureAP), offAD = core.some(pureAD);
+  const sameVariant = id => (offAP && !offAD && pureAD(id)) || (offAD && !offAP && pureAP(id)) ? false : true;
+  // Objets de situation (correction 3), recette logique P1-3 : seulement ceux que peu de joueurs achètent (< 25 % du pool) ;
+  // un objet acheté par un quart des joueurs ou plus fait partie du build normal même s'il est aussi cité « contre X ».
+  const share = {}; (b.pool || []).forEach(([id, p]) => { share[String(id)] = p; });
+  const situational = new Set(Object.values(b.vs || {}).flat().map(x => String(x[0])).filter(id => (share[id] || 0) < SITUATIONAL_MAX_SHARE));
+  // Compléter jusqu'à 4 objets avec le pool : 1er passage strict ; le filtre armure / RM pure ne joue que si au moins
+  // 3 adversaires sont connus ; 2e passage si le cœur reste incomplet (même sans compo adverse)
+  const passes = [
+    s => !situational.has(s) && (F.n < 3 || fitsThreat(s, F)),
+    s => fitsCore(s, F),
+  ];
+  for (const ok of passes) for (const [id] of (b.pool || [])) {
     if (core.length >= 4) break;
     const s = String(id);
-    if (situational.has(s) || s === '3026' || !sameVariant(s) || !fitsThreat(s, F) || !can(s)) continue;
+    if (s === '3026' || !sameVariant(s) || !ok(s) || !can(s)) continue;
     core.push(take(s));
   }
 
@@ -415,9 +445,13 @@ export function generateGameTips(champion, enemyLaner, allyTeam, isBeginnerInPoo
   const build = recommendedBuild(champion, r, enemyTeam, enemyLaner);
   const T = timersFR();
   const early = isBeginnerInPool ? ['Farm sous ta tour si tu es en danger', 'Évite les échanges prolongés', 'Rentre à la base vers 60 % de PV si l\'adversaire a l\'avantage'] : getEarlyAdvice(champion, r, T);
+  if (isBeginnerInPool && r === 'SUPPORT') early.splice(0, 1, 'Reste près de ton ADC et de ta tour si vous êtes en danger');
   const mid = getMidAdvice(champion, allyTeam, T, r);
-  const late = getLateAdvice(champion);
-  const lane = enemyLaner ? getLaneAdvice(champion, enemyLaner, r, build) : (r === 'JUNGLE' ? jungleAdvice(allyTeam, T) : ['Joue safe, farm et attends les opportunités']);
+  const late = getLateAdvice(champion, r);
+  // Recette logique P1-2 : le jungler garde toujours son plan de jungle (gank, crabe, objectifs) ;
+  // le jungler adverse et le duel de jungle viennent en dessous
+  const lane = r === 'JUNGLE' ? [...jungleAdvice(champion, allyTeam, T), ...(enemyLaner ? jungleDuel(champion, enemyLaner) : [])]
+    : enemyLaner ? getLaneAdvice(champion, enemyLaner, r, build) : ['Joue safe, farm et attends les opportunités'];
   return {
     early, mid, late, lane,
     build: build ? {
@@ -427,45 +461,90 @@ export function generateGameTips(champion, enemyLaner, allyTeam, isBeginnerInPoo
       ids: build, source: `Build le plus joué chez les meilleurs joueurs (${build.games} parties Challenger / GM / Master)`,
     } : { ...legacyBuild(champion), source: 'Pas assez de parties à ce poste : build type de la classe (indicatif)' },
     runes: build && build.runes ? { keystone: build.runes.keystone, primary: build.runes.primary, secondary: build.runes.secondary, description: [...build.runes.primaryRunes, ...build.runes.secondaryRunes].join(' · ') + (build.spells.length ? ` — Sorts : ${build.spells.join(' + ')}` : '') } : legacyRunes(champion),
-    commonMistakes: getCommonMistakes(champion, build),
+    commonMistakes: getCommonMistakes(champion, build, r),
   };
 }
 function timersFR() {
   const t = meta().timers || {};
   return { scuttle: fmtTime(t.scuttle || 175), dragon: fmtTime(t.dragon || 300), grubs: fmtTime(t.grubs || 480), herald: fmtTime(t.herald || 900), baron: fmtTime(t.baron || 1200), plates: fmtTime(t.platesDecay ? t.platesDecay + 180 : 840) };
 }
+// Recette logique P1-4 : les conseils de phase se choisissent d'abord par poste, puis se nuancent par classe.
+// Clé de profil = poste + façon de le jouer (un mage support ne lit pas les conseils d'un mage mid,
+// un tireur top ne lit pas « reste derrière ton support »).
+export function tipProfile(c, role) {
+  const cls = c.class || 'Specialist';
+  if (role === 'SUPPORT') {
+    const arch = (meta().supports[c.id] || {}).arch;
+    if (arch === 'enchanter' || (!arch && cls === 'Enchanter')) return 'SUP_ENCHANTER';
+    if (arch === 'engage' || arch === 'warden' || (!arch && cls === 'Tank')) return 'SUP_ENGAGE';
+    if (arch === 'mage' || (!arch && cls === 'Mage')) return 'SUP_MAGE';
+    return 'SUP_PICK';
+  }
+  if (role === 'ADC') return cls === 'Marksman' ? 'ADC_MARKSMAN' : cls === 'Mage' || cls === 'Enchanter' || cls === 'Specialist' ? 'ADC_MAGE' : 'ADC_MELEE';
+  if (role === 'JUNGLE') return 'JUNGLE_' + cls;
+  // TOP / MID
+  if (cls === 'Marksman') return role + '_RANGED';
+  if (cls === 'Enchanter') return role + '_Mage';
+  return role + '_' + cls;
+}
+const EARLY = {
+  SUP_ENGAGE: ['Cherche l\'engage au niveau 2 quand ton ADC peut suivre', 'Ward la rivière ou le tri-bush avant 3:00 pour voir leur jungler', 'Laisse les sbires à ton ADC, occupe-toi du duo adverse'],
+  SUP_ENCHANTER: ['Zone le carry ennemi', 'Boucliers et soins en réponse à leurs échanges', 'Roam avec ta jungle quand ta vague est en sécurité'],
+  SUP_MAGE: ['Poke le duo adverse quand il s\'avance pour un sbire', 'Laisse les sbires à ton ADC : ne vole pas son or', 'Ward la rivière et garde du mana pour te défendre'],
+  SUP_PICK: ['Cherche le pick aux niveaux 2-3 avec ton ADC', 'Laisse les sbires à ton ADC, joue dans les buissons', 'Roam mid quand leur jungler est montré de l\'autre côté'],
+  ADC_MARKSMAN: ['Last hit prioritaire', 'Reste derrière ton support', 'Méfie-toi des engages de la botlane adverse'],
+  ADC_MAGE: ['Last hit avec tes auto-attaques, garde tes sorts pour les échanges', 'Joue à la hauteur de ton support, pas devant', 'Méfie-toi des engages de la botlane adverse'],
+  ADC_MELEE: ['Last hit prioritaire : tu n\'as pas la portée pour échanger souvent', 'All-in avec ton support quand leurs sorts sont en recharge', 'Recule dès que leur support cherche l\'engage'],
+  TOP_Tank: ['Échanges courts dès le niveau 3', 'Pose des wards offensives', 'Aide ta jungle sur le crabe et les premiers objectifs'],
+  TOP_Bruiser: ['Échange au niveau 1 si ton profil est fort tôt', 'Pousse la vague avant chaque retour', 'All-in quand ton pic de puissance arrive'],
+  TOP_Mage: ['Poke à chaque fois qu\'il vient last-hit', 'Garde une ward dans la rivière : seul en lane, les ganks font mal', 'Gère ton mana : garde de quoi te dégager'],
+  TOP_Assassin: ['Farm prudemment jusqu\'à ton premier objet', 'Punis chaque échange raté avec un all-in court', 'Ward la rivière : tu es fragile face aux ganks'],
+  TOP_RANGED: ['Profite de ta portée : touche-le à chaque last hit', 'Garde une ward dans la rivière : seul en lane, les ganks font mal', 'Recule quand il a ses sorts d\'engage'],
+  TOP_Specialist: ['Farm et échange quand ses sorts sont en recharge', 'Ward la rivière avant 3:00', 'Garde ta Téléportation ou ton Flash pour te sortir des ganks'],
+  MID_Mage: ['Farm et poke quand c\'est possible', 'Pousse la vague puis roam mid / bot', 'Gère ton mana : garde de quoi te défendre'],
+  MID_Assassin: ['Farm prudemment jusqu\'au niveau 6', 'Roam à la première occasion', 'Vise le carry le plus fragile'],
+  MID_RANGED: ['Profite de ta portée : poke-le quand il vient last-hit', 'Pousse la vague avant de bouger sur la carte', 'Ward les deux flancs : les ganks mid arrivent des deux côtés'],
+  MID_Tank: ['Survis à la lane et pousse la vague pour suivre ta jungle', 'Pose des wards offensives', 'Aide ta jungle sur le crabe et les premiers objectifs'],
+  MID_Bruiser: ['Échange court quand il gaspille un sort', 'Pousse la vague avant chaque retour', 'All-in quand ton pic de puissance arrive'],
+  MID_Specialist: ['Farm et échange quand ses sorts sont en recharge', 'Pousse la vague puis roam', 'Ward les deux flancs'],
+};
 function getEarlyAdvice(c, role, T) {
   if (role === 'JUNGLE') return [`Full clear terminé vers 3:00-3:20, puis crabe (${T.scuttle}) du côté où tes lanes ont la priorité`, 'Les buffs réapparaissent 5:00 après leur mort : note l\'heure', `Drake à ${T.dragon}, larves à ${T.grubs} : prépare la vision une minute avant`];
-  const map = {
-    Tank: ['Échanges courts dès le niveau 3', 'Pose des wards offensives', 'Aide ta jungle sur le crabe et les premiers objectifs'],
-    Bruiser: ['Échange au niveau 1 si ton profil est fort tôt', 'Pousse la vague avant chaque retour', 'All-in quand ton pic de puissance arrive'],
-    Mage: ['Farm et poke quand c\'est possible', 'Pousse la vague puis roam mid / bot', 'Gère ton mana : garde de quoi te défendre'],
-    Assassin: ['Farm prudemment jusqu\'au niveau 6', 'Roam à la première occasion', 'Vise le carry le plus fragile'],
-    Marksman: ['Last hit prioritaire', 'Reste derrière ton support', 'Méfie-toi des engages de la botlane adverse'],
-    Enchanter: ['Zone le carry ennemi', 'Boucliers et soins en réponse à leurs échanges', 'Roam avec ta jungle si ta vague est poussée'],
-  };
-  return map[c.class] || ['Farm safe', 'Joue les objectifs'];
+  const p = tipProfile(c, role);
+  return [...(EARLY[p] || EARLY[role + '_Specialist'] || ['Farm safe', 'Joue les objectifs'])];
 }
 function getMidAdvice(c, allyTeam, T, role) {
   const winCond = getWinCondition(detectSynergies(allyTeam || []));
   // C10 : pas de Héraut pour l'ADC, un conseil de son poste à la place
-  const obj = role === 'ADC' ? `Reste avec le groupe pour les drakes (${T.dragon}) et prends la vague bot avant chaque objectif` : `Participe aux drakes et au Héraut (${T.herald})`;
-  const generic = [`Condition de victoire : ${winCond}`, obj, 'Pousse ta vague avant chaque objectif'];
+  const obj = role === 'ADC' ? `Reste avec le groupe pour les drakes (${T.dragon}) et prends la vague bot avant chaque objectif` : role === 'SUPPORT' ? `Pose la vision une minute avant les drakes (${T.dragon}) et le Héraut (${T.herald})` : `Participe aux drakes et au Héraut (${T.herald})`;
+  const generic = [`Condition de victoire : ${winCond}`, obj, role === 'SUPPORT' ? 'Accompagne ta jungle pour poser et nettoyer la vision' : 'Pousse ta vague avant chaque objectif'];
   if (c.powerSpike === 'mid') generic.unshift('C\'est ton pic de puissance : force les combats.');
-  if (c.powerSpike === 'late') generic.unshift('Farm et évite les combats inutiles, ton pic arrive.');
+  if (c.powerSpike === 'late') generic.unshift(role === 'SUPPORT' ? 'Évite les combats inutiles : ton équipe gagne en puissance.' : 'Farm et évite les combats inutiles, ton pic arrive.');
   if (c.powerSpike === 'early') generic.unshift('Prends les objectifs avant de perdre ton avance.');
   return generic.slice(0, 3);
 }
-function getLateAdvice(c) {
-  const map = {
-    Tank: ['Engage les teamfights', 'Sois le premier à plonger', 'Protège tes carries sur le flanc'],
-    Bruiser: ['Splitpush ou teamfight selon le score', 'Isole les carries ennemis', 'Reste utile en 5v5'],
-    Mage: ['Reste en arrière en teamfight', 'Vise les groupes avec tes zones', 'Garde toujours Flash'],
-    Assassin: ['Élimine le carry ennemi avant le combat', 'Utilise tes réinitialisations pour nettoyer', 'Attention au peel ennemi'],
-    Marksman: ['Suis le focus de ton tank', 'Kite vers l\'arrière', 'Ne te mets jamais en avant'],
-    Enchanter: ['Reste proche de ton carry', 'Priorité : boucliers et soins sur le carry', 'Garde tes contrôles pour les plongeurs'],
-  };
-  return map[c.class] || ['Joue les objectifs', `Force le Baron quand tu as l'avantage numérique`, 'Ne meurs pas gratuitement'];
+const LATE_CLASS = {
+  Tank: ['Engage les teamfights', 'Sois le premier à plonger', 'Protège tes carries sur le flanc'],
+  Bruiser: ['Splitpush ou teamfight selon le score', 'Isole les carries ennemis', 'Reste utile en 5v5'],
+  Mage: ['Reste en arrière en teamfight', 'Vise les groupes avec tes zones', 'Garde toujours Flash'],
+  Assassin: ['Élimine le carry ennemi avant le combat', 'Utilise tes réinitialisations pour nettoyer', 'Attention au peel ennemi'],
+  Marksman: ['Suis le focus de ton tank', 'Kite vers l\'arrière', 'Ne te mets jamais en avant'],
+  Enchanter: ['Reste proche de ton carry', 'Priorité : boucliers et soins sur le carry', 'Garde tes contrôles pour les plongeurs'],
+};
+const LATE = {
+  SUP_ENGAGE: ['Engage quand ton équipe peut suivre, pas avant', 'Ward devant le groupe avant chaque objectif', 'Garde un contrôle pour protéger ton ADC des plongeurs'],
+  SUP_ENCHANTER: LATE_CLASS.Enchanter,
+  SUP_MAGE: ['Reste derrière ta frontline et poke avant le combat', 'Garde tes contrôles pour les plongeurs', 'Pose la vision avec ta jungle avant le Baron'],
+  SUP_PICK: ['Cherche les picks avec de la vision avant les objectifs', 'Ne pars pas seul sans ta jungle', 'Protège ton ADC quand le combat commence'],
+  ADC_MAGE: ['Reste en arrière en teamfight', 'Vise les groupes avec tes sorts', 'Garde toujours Flash'],
+  ADC_MELEE: ['Entre dans le combat après les contrôles de ton équipe', 'Garde un sort de mobilité pour sortir', 'Ne lance pas le combat seul'],
+  TOP_RANGED: ['Splitpush quand ton équipe tient le milieu', 'Reste à distance en teamfight', 'Ne te mets jamais en avant sans vision'],
+  MID_RANGED: ['Reste à distance en teamfight', 'Suis le focus de ton tank', 'Ne te mets jamais en avant sans vision'],
+};
+function getLateAdvice(c, role) {
+  const p = tipProfile(c, role || 'MID');
+  if (LATE[p]) return [...LATE[p]];
+  return [...(LATE_CLASS[c.class] || ['Joue les objectifs', `Force le Baron quand tu as l'avantage numérique`, 'Ne meurs pas gratuitement'])];
 }
 const PUSHY = /pousse|pression|prends l'avantage|agressi|prends la main|plaques/i;
 const SAFE = /survis|farm près|farm prudemment|sécurité|joue safe|farm calmement/i;
@@ -486,39 +565,62 @@ function getLaneAdvice(ally, enemy, role, build) {
   const tone = !m.measured ? null : m.advantage === 'ally' ? 'aggro' : m.advantage === 'enemy' ? 'safe' : 'even';
   const out = [`${adv} : ${m.reason}`, `Timing clé : ${m.timing}`, m.advice];
   const rng = c => ((DATA.champs[c.id] || {}).stats || {}).attackrange >= 300;
-  if (role !== 'JUNGLE') {
-    if (rng(ally) && !rng(enemy)) out.push(`Tu as la portée : touche ${enemy.name} quand il vient last-hit`);
-    else if (!rng(ally) && rng(enemy)) out.push(`${enemy.name} a la portée : farm prudemment et engage quand il a gaspillé un sort`);
-  }
+  if (rng(ally) && !rng(enemy)) out.push(`Tu as la portée : touche ${enemy.name} quand il vient last-hit`);
+  else if (!rng(ally) && rng(enemy)) out.push(`${enemy.name} a la portée : farm prudemment et engage quand il a gaspillé un sort`);
   // Téléportation : seulement si le build la prend (C3)
   if (role === 'TOP' && build) {
     if (build.spellIds.includes(12)) out.push('Garde ta Téléportation pour un drake ou un gank');
     else if (build.spellIds.includes(6)) out.push('Garde ton Fantôme pour un all-in ou une poursuite');
     else if (build.spellIds.includes(14)) out.push('Embrasement : cherche le kill aux niveaux 2-3 (il réduit aussi ses soins)');
   }
-  const jp = meta().junglers[enemy.id];
-  if (role === 'JUNGLE' && jp) out.push(`${enemy.name} : ${jp.note}`);
   return coherentPlan(out, tone);
 }
-// Aide de jungle (correction 13 et C9) : choisir la lane à ganker d'après le contrôle allié
-function jungleAdvice(allyTeam, T) {
-  const ctrl = (allyTeam || []).filter(c => isEngager(c.id) || c.class === 'Tank');
+// Jungler adverse choisi : sa note (meta.junglers) et le duel de jungle mesuré, sans conseil de laner
+function jungleDuel(me, enemy) {
+  const out = [];
+  const jp = meta().junglers[enemy.id];
+  if (jp) out.push(`${enemy.name} : ${jp.note}`);
+  const m = analyzeLaneMatchup(me, enemy, 'JUNGLE');
+  if (m && m.measured) {
+    const tip = m.advantage === 'ally' ? 'envahis sa jungle quand tes lanes ont la priorité'
+      : m.advantage === 'enemy' ? 'évite les duels dans sa jungle, contre-ganke près de tes lanes'
+      : 'suis ses ganks pour contre-ganker du bon côté';
+    out.push(`${m.advantage === 'ally' ? '✅' : m.advantage === 'enemy' ? '⚠️' : '⚖️'} ${m.reason.replace(/^Duel/, 'Duel de jungle')} : ${tip}`);
+  } else if (m) out.push(`Duel de jungle contre ${enemy.name} non mesuré (pas assez de parties) : suis ses ganks pour contre-ganker du bon côté`);
+  return out;
+}
+// Aide de jungle (correction 13 et C9) : choisir la lane à ganker d'après le contrôle allié.
+// Recette logique P1-2 : le jungler lui-même n'est jamais dans la liste
+function jungleAdvice(me, allyTeam, T) {
+  const allies = (allyTeam || []).filter(c => c && c.id !== (me && me.id));
+  const ctrl = allies.filter(c => hasCC(c.id) || c.class === 'Tank');
   return [
-    ctrl.length ? `Ganke en priorité les lanes avec du contrôle : ${ctrl.map(c => c.name).join(', ')}` : ((allyTeam || []).length ? 'Peu de contrôle allié : ganke la lane adverse sans échappatoire et sans Flash' : 'Ajoute tes alliés pour savoir quelle lane ganker'),
+    ctrl.length ? `Ganke en priorité les lanes avec du contrôle : ${ctrl.map(c => c.name).join(', ')}` : (allies.length ? 'Peu de contrôle allié : ganke la lane adverse sans échappatoire et sans Flash' : 'Ajoute tes alliés pour savoir quelle lane ganker'),
     `Crabe à ${T.scuttle} (à vérifier sur le patch en cours) si ta bot ou ta mid peut suivre`,
     `Drake à ${T.dragon}, larves à ${T.grubs}, Baron à ${T.baron}`,
   ];
 }
-function getCommonMistakes(c, build) {
-  const map = {
-    Tank: ['Engager sans vision', 'Ne pas utiliser ses contrôles en teamfight', 'Se faire poke hors de portée'],
-    Bruiser: ['All-in quand la jungle adverse est proche', 'Mourir pour un kill peu rentable', 'Ne pas splitpush quand tu as l\'avance'],
-    Mage: ['Utiliser ses sorts seulement pour nettoyer la vague', 'Rester à portée quand on te roam', 'Pas de vision sur les flancs'],
-    Assassin: ['All-in quand l\'ennemi a Flash', 'Négliger la vague pour roam', 'Mourir pour un kill non garanti'],
-    Marksman: ['S\'avancer seul', 'Utiliser Flash en attaque', 'Mauvais placement en teamfight'],
-    Enchanter: ['Utiliser Flash pour soigner', 'Coller le carry au point de ne plus warder', 'Négliger la vision'],
-  };
-  const out = [...(map[c.class] || ['Gérer son économie', 'Jouer les objectifs', 'Éviter les morts inutiles'])];
+const MISTAKES_CLASS = {
+  Tank: ['Engager sans vision', 'Ne pas utiliser ses contrôles en teamfight', 'Se faire poke hors de portée'],
+  Bruiser: ['All-in quand la jungle adverse est proche', 'Mourir pour un kill peu rentable', 'Ne pas splitpush quand tu as l\'avance'],
+  Mage: ['Utiliser ses sorts seulement pour nettoyer la vague', 'Rester à portée quand on te roam', 'Pas de vision sur les flancs'],
+  Assassin: ['All-in quand l\'ennemi a Flash', 'Négliger la vague pour roam', 'Mourir pour un kill non garanti'],
+  Marksman: ['S\'avancer seul', 'Utiliser Flash en attaque', 'Mauvais placement en teamfight'],
+  Enchanter: ['Utiliser Flash pour soigner', 'Coller le carry au point de ne plus warder', 'Négliger la vision'],
+};
+const MISTAKES = {
+  SUP_ENGAGE: ['Engager quand ton ADC ne peut pas suivre', 'Engager sans vision', 'Oublier de warder avant les objectifs'],
+  SUP_ENCHANTER: MISTAKES_CLASS.Enchanter,
+  SUP_MAGE: ['Prendre les sbires de ton ADC', 'Gaspiller ton mana en poke avant un all-in adverse', 'Négliger la vision'],
+  SUP_PICK: ['Partir en roam quand ton ADC est seul contre deux', 'Prendre les sbires de ton ADC', 'Chercher un pick sans vision'],
+  ADC_MAGE: ['Gaspiller ses sorts sur les sbires au lieu d\'échanger', 'S\'avancer seul', 'Mauvais placement en teamfight'],
+  ADC_MELEE: ['All-in sans ton support', 'Utiliser son sort de mobilité pour engager', 'Entrer dans le combat avant les contrôles de ton équipe'],
+  TOP_RANGED: ['Avancer sans ward dans la rivière', 'Laisser le corps à corps arriver sur toi sans le punir', 'Mauvais placement en teamfight'],
+  MID_RANGED: ['Avancer sans ward sur les flancs', 'Utiliser Flash en attaque', 'Mauvais placement en teamfight'],
+};
+function getCommonMistakes(c, build, role) {
+  const p = tipProfile(c, role || 'MID');
+  const out = [...(MISTAKES[p] || MISTAKES_CLASS[c.class] || ['Gérer son économie', 'Jouer les objectifs', 'Éviter les morts inutiles'])];
   if (build && build.spellIds.includes(12)) out.push('Utiliser ta Téléportation sans raison : garde-la pour un drake ou un gank');
   return out.slice(0, 4);
 }

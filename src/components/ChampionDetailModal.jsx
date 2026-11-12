@@ -26,7 +26,7 @@ function getChampionByIdOrName(champions, idOrName) {
   );
 }
 
-function MiniChamp({ idOrName, champions, label }) {
+function MiniChamp({ idOrName, champions, label, gap }) {
   const champ = getChampionByIdOrName(champions, idOrName);
   if (!champ) return (
     <div className="flex flex-col items-center gap-1">
@@ -39,6 +39,7 @@ function MiniChamp({ idOrName, champions, label }) {
       <img src={champ.iconUrl} alt={champ.name} className="w-10 h-10 rounded-lg object-cover border border-border" onError={e => { e.target.style.display='none'; }} />
       <span className="text-[11px] text-muted-foreground text-center leading-tight w-12 truncate">{champ.name}</span>
       {label && <span className="text-[11px] text-primary font-medium">{label}</span>}
+      {gap && <span className="text-[11px] text-muted-foreground leading-none">{gap}</span>}
     </div>
   );
 }
@@ -186,6 +187,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
                           </React.Fragment>
                         ))}
                       </div>
+                      {details.skillNote && <p className="text-xs text-muted-foreground leading-relaxed mt-2">{details.skillNote}</p>}
                     </div>
                   </div>
                 )}
@@ -237,7 +239,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
                   {details?.counteredBy?.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                       {details.counteredBy.map((id, i) => (
-                        <MiniChamp key={i} idOrName={id} champions={champions} label={details?.counterLabels?.[id]} />
+                        <MiniChamp key={i} idOrName={id} champions={champions} label={details?.counterLabels?.[id]} gap={details?.counterGaps?.[id]} />
                       ))}
                     </div>
                   ) : (
@@ -254,7 +256,7 @@ export default function ChampionDetailModal({ champion, role, champions, version
                   {details?.counters?.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                       {details.counters.map((id, i) => (
-                        <MiniChamp key={i} idOrName={id} champions={champions} label={details?.counterLabels?.[id]} />
+                        <MiniChamp key={i} idOrName={id} champions={champions} label={details?.counterLabels?.[id]} gap={details?.counterGaps?.[id]} />
                       ))}
                     </div>
                   ) : (

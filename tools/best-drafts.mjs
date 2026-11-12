@@ -4,12 +4,13 @@
 // Usage : node tools/best-drafts.mjs
 //   COACH_BASE  (défaut https://nanileb.github.io/lol-support-coach/) : où lire builds.json, counters.json, meta.json
 //   COACH_DIR   (facultatif) : dossier local contenant ces 3 fichiers (prioritaire sur COACH_BASE)
+//   MIN_GAMES   (défaut 100) : parties minimum d'un champion à son poste pour entrer dans une draft
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DATA, DD, setData, fixIds } from '../src/lib/gameData.js';
 import { buildChampion, enrichChampion } from '../src/lib/championEngine.js';
-import { computeBestDrafts } from '../src/lib/bestDraftsEngine.js';
+import { computeBestDrafts, BEST_DRAFT_MIN_GAMES } from '../src/lib/bestDraftsEngine.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = (process.env.COACH_BASE || 'https://nanileb.github.io/lol-support-coach/').replace(/\/?$/, '/');
@@ -29,9 +30,11 @@ setData({ builds: fixIds(builds), cnt: fixIds(counters), meta });
 const byId = {};
 Object.values(champs.data).forEach(c => { byId[c.id] = enrichChampion(buildChampion({ ...c, iconVersion: version })); });
 const t0 = Date.now();
-const drafts = computeBestDrafts(byId, 10);
+const minGames = +(process.env.MIN_GAMES || BEST_DRAFT_MIN_GAMES);
+const drafts = computeBestDrafts(byId, 10, 60, minGames);
 const out = {
   generated: new Date().toISOString(), patch: builds.patch, ddragon: version,
+  minGames,
   source: `builds.json (${builds.games} parties ${builds.players || 'Challenger / GM / Master'}, ${(builds.regions || []).join(' + ')}), counters.json (${counters.source} ${counters.rank}, patch ${counters.patch}), meta.json (${meta.patch})`,
   drafts,
 };
