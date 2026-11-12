@@ -2,5 +2,7 @@
   "name": "lol-support-coach",
   "main": "riot-proxy.js",
   "compatibility_date": "2026-10-01",
-  "vars": { "ALLOWED_ORIGIN": "https://nanileb.github.io" }
+  "vars": { "ALLOWED_ORIGIN": "https://nanileb.github.io" },
+  // Pools partagés entre amis DraftMaster (routes /pool et /pools)
+  "kv_namespaces": [{ "binding": "POOLS", "id": "61041a9136224ff99b647bcc786bf753" }]
 }
