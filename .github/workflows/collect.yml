@@ -4,7 +4,7 @@
 # - Chaque mardi : collecte complète même sans nouveau patch (les parties s'ajoutent à data/samples.json.gz).
 # - Counters (Lolalytics) et règles de meta.json sont relevés à la main : un ticket GitHub le rappelle à chaque patch.
 # Après la collecte, le batch « dernier patch » recalcule les meilleures drafts et republie le site.
-# Heure : 9 h UTC, après la collecte du coach (3 h / 4 h UTC) tant qu'elle tourne encore : même clé Riot, jamais en même temps.
+# Heure : 9 h UTC, une collecte à la fois (concurrency: riot).
 name: Builds des meilleurs joueurs
 
 on:

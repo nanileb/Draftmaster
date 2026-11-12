@@ -95,7 +95,7 @@ Lu en direct à chaque ouverture, sans republication : champions, objets, runes,
 
 ## Relais Riot
 
-Le code du relais est dans `worker/` (aucune clé Riot dans l'application ni dans GitHub). C'est le même worker Cloudflare qu'utilisait le coach, à la même adresse ; voir `worker/README.md` pour le redéployer depuis ce dépôt.
+Le code du relais est dans `worker/` (aucune clé Riot dans l'application ni dans GitHub). Cloudflare le redéploie depuis ce dépôt (voir `worker/README.md`).
 
 ## Structure
 
