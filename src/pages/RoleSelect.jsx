@@ -68,14 +68,14 @@ function RoleButton({ role, onSelect }) {
   );
 }
 
-export default function RoleSelect({ onSelectRole, championCount, version, onShowBestDrafts, onShowTeamOptimization, userPool, champions = [] }) {
+export default function RoleSelect({ onSelectRole, championCount, version, onShowBestDrafts, onShowTeamOptimization, userPool, champions = [], liveSlot = null }) {
   const topRow = ROLES.slice(0, 3);
   const bottomRow = ROLES.slice(3);
 
 
 
   return (
-    <div className="flex flex-col px-5 py-4 overflow-hidden justify-between" style={{ height: 'calc(100dvh - 64px - env(safe-area-inset-bottom, 0px))' }}>
+    <div className="flex flex-col px-5 py-4 overflow-y-auto justify-between gap-4" style={{ minHeight: 'calc(100dvh - 64px - env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
       <div className="relative text-center space-y-1.5 pt-2">
         <div className="absolute right-0 top-0">
@@ -111,16 +111,17 @@ export default function RoleSelect({ onSelectRole, championCount, version, onSho
 
       {/* Bottom */}
       <div className="space-y-2.5 pb-2">
+        {liveSlot}
         <button
           onClick={onShowTeamOptimization}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-accent/30 bg-accent/5 text-accent font-grotesk font-semibold text-sm active:scale-[0.98] transition-all"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-accent/30 bg-accent/5 text-accent font-grotesk font-semibold text-sm active:scale-[0.98] transition-all"
         >
           <Users className="w-4 h-4" />
           Optimisation d'équipe
         </button>
         <button
           onClick={onShowBestDrafts}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-gold/30 bg-gold/5 text-gold font-grotesk font-semibold text-sm active:scale-[0.98] transition-all"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-gold/30 bg-gold/5 text-gold font-grotesk font-semibold text-sm active:scale-[0.98] transition-all"
         >
           <TrendingUp className="w-4 h-4" />
           Meilleures drafts actuelles

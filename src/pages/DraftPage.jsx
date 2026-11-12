@@ -9,6 +9,7 @@ import DraftScoreBar from '@/components/DraftScoreBar';
 import SynergyPanel from '@/components/SynergyPanel';
 import MatchupPanel from '@/components/MatchupPanel';
 import { ROLE_LABELS } from '@/lib/championEngine';
+import LiveGameButton from '@/components/ingame/LiveGameButton';
 
 function Swords({ className }) {
   return (
@@ -75,6 +76,9 @@ export default function DraftPage({
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-none px-4 pb-28" style={{paddingBottom: 'max(7rem, calc(7rem + env(safe-area-inset-bottom)))'}}>
+        {/* Partie déjà lancée : tout se remplit depuis le relais Riot */}
+        <LiveGameButton champions={champions} role={selectedRole} compact className="pt-4" />
+
         {/* Ally slots by role */}
         <div className="py-4 space-y-3">
           <RoleTeamSlots

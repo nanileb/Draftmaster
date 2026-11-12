@@ -18,7 +18,14 @@ export default function TipsRoute() {
       selectedRole={draft.selectedRole}
       allyTeam={draft.allyTeam}
       enemyTeam={draft.enemyTeam}
+      allyByRole={draft.allyByRole}
       enemyByRole={draft.enemyByRole}
+      side={draft.side}
+      setSide={draft.setSide}
+      timerStart={draft.timerStart}
+      setTimerStart={draft.setTimerStart}
+      kills={draft.kills}
+      setKills={draft.setKills}
       draftScore={draft.draftScore}
       winProbability={draft.winProbability}
       scoreInfo={draft.scoreInfo}
