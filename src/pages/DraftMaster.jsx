@@ -116,7 +116,7 @@ export default function DraftMaster() {
 
   return (
     <DraftProvider champions={champions}>
-      <div className="min-h-screen bg-background max-w-md mx-auto relative overflow-x-hidden">
+      <div className="min-h-screen bg-background max-w-md mx-auto relative overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
         <ScreenTransition direction={slideDir} id={location.pathname}>
           <div className={contentPb}>
             <Outlet context={{ champions, version, dataRev }} />

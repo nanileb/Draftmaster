@@ -16,8 +16,11 @@ export default function MatchupRoute() {
     <MatchupAssignment
       enemyTeam={draft.enemyTeam}
       enemyByRole={draft.enemyByRole}
+      allyByRole={draft.allyByRole}
+      myChampion={draft.myChampion}
       onSetEnemyRole={draft.setEnemyRole}
       onSwapEnemyRoles={draft.swapEnemyRoles}
+      onSwapAllyRoles={draft.swapAllyRoles}
       onGoToTips={() => navigate('/home/tips')}
       onBack={() => navigate(-1)}
     />

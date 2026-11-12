@@ -41,6 +41,9 @@ Comme l'application est sur la même origine que le coach (`https://nanileb.gith
 | Duels de lane (counters) | `counters.json` du coach (Lolalytics, Émeraude+) | idem |
 | Méta support / ADC, tiers support, engages, frontline, minuteurs | `meta.json` du coach | idem |
 | Historique de parties, rang | Relais Riot du coach (worker Cloudflare) | `src/lib/riot.js` |
+| Partie en cours (équipes, côté, chrono) | Route `/live` du relais Riot du coach | `src/lib/liveGame.js` |
+| Lane, chronologie (wards, objectifs), ordre d'achat | Port des onglets du coach LoL | `src/lib/inGame.js`, `src/components/ingame/` |
+| Carte de la Faille (chronologie) | Image du coach | `public/data/map-sr.jpg` |
 | Combos de sorts (14 champions) | Export de l'ancienne application Base44 | `public/data/combos.json` |
 | Meilleures drafts du patch | Calculées par `tools/best-drafts.mjs` | `public/data/best-drafts.json` |
 
@@ -58,6 +61,7 @@ Pas de compte. Tout reste sur l'appareil :
 - `dm_settings` : serveur, adresse du relais Riot, adresse des données du coach ;
 - `dm_identity` : id de synchro (public, mis dans le lien de partage) et clé secrète du téléphone ; `dm_sync` : état du dernier envoi ;
 - `dm_an` : résumés des parties analysées dans Profil (analyse complète et dernière game), `dm_an_role` : poste choisi pour l'analyse, `dm_profile_tab` : dernier onglet ouvert du profil ;
+- `dm_game` : partie en cours (postes, champions, côté, chrono, drakes) pour la retrouver après un rechargement ; `dm_alerts` : son / vibration des alertes ;
 - `riotId` ; copies de secours des données du coach (`dm_coach_*`) et de Data Dragon.
 
 Profil › Mon Pool › « Effacer mes données locales » vide tout.

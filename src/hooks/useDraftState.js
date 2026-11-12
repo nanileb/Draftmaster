@@ -17,17 +17,59 @@ export const STEPS = {
 };
 
 const EMPTY_BY_ROLE = { TOP: null, JUNGLE: null, MID: null, ADC: null, SUPPORT: null };
+const ROLE_KEYS = Object.keys(EMPTY_BY_ROLE);
+
+// Partie en cours gardée dans le navigateur : un rechargement (écran verrouillé, onglet purgé par iOS) ne perd ni la draft ni le chrono
+const GAME_KEY = 'dm_game';
+const readGame = () => { try { return JSON.parse(localStorage.getItem(GAME_KEY) || 'null'); } catch (e) { return null; } };
+const writeGame = (o) => { try { if (o) localStorage.setItem(GAME_KEY, JSON.stringify(o)); else localStorage.removeItem(GAME_KEY); } catch (e) { /* stockage indisponible */ } };
+const idsOf = (byRole) => Object.fromEntries(ROLE_KEYS.map(r => [r, byRole[r] ? byRole[r].id : null]));
+const EMPTY_KILLS = { drakes: [], soul: null };
+
+// Lit la partie gardée (null si absente, ancienne de plus de 3 h, ou champions pas encore chargés)
+function restoreGame(champions) {
+  if (!champions || !champions.length) return null;
+  const g = readGame(); if (!g || !g.role) return null;
+  if (g.savedAt && Date.now() - g.savedAt > 3 * 3600 * 1000) { writeGame(null); return null; }
+  const byId = Object.fromEntries(champions.map(c => [c.id, c]));
+  const back = (o) => Object.fromEntries(ROLE_KEYS.map(r => [r, (o && o[r] && byId[o[r]]) || null]));
+  return {
+    role: g.role, ally: back(g.ally), enemy: back(g.enemy), me: (g.me && byId[g.me]) || null,
+    side: g.side === 'red' ? 'red' : 'blue', timerStart: g.timerStart || null, kills: g.kills || EMPTY_KILLS,
+  };
+}
 
 export function useDraftState(champions) {
+  // Reprise synchrone : un rechargement sur /home/tips retrouve tout de suite la partie
+  const [init] = useState(() => restoreGame(champions));
   const [step, setStep] = useState(STEPS.ROLE);
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(init ? init.role : null);
   // allyByRole: { TOP: champion|null, ... }
-  const [allyByRole, setAllyByRole] = useState({ ...EMPTY_BY_ROLE });
+  const [allyByRole, setAllyByRole] = useState(init ? init.ally : { ...EMPTY_BY_ROLE });
   // enemyByRole: { TOP: champion|null, ... }
-  const [enemyByRole, setEnemyByRole] = useState({ ...EMPTY_BY_ROLE });
-  const [myChampion, setMyChampion] = useState(null);
+  const [enemyByRole, setEnemyByRole] = useState(init ? init.enemy : { ...EMPTY_BY_ROLE });
+  const [myChampion, setMyChampion] = useState(init ? init.me : null);
   const [userPool, setUserPool] = useState([]);
   const [poolLoaded, setPoolLoaded] = useState(false);
+  // En jeu : côté de la carte, début du chrono (horodatage) et objectifs tués
+  const [side, setSide] = useState(init ? init.side : 'blue');
+  const [timerStart, setTimerStart] = useState(init ? init.timerStart : null);
+  const [kills, setKills] = useState(init ? init.kills : EMPTY_KILLS);
+  const [restored, setRestored] = useState(!!(champions && champions.length));
+
+  // Champions arrivés après le montage : reprise à ce moment-là
+  useEffect(() => {
+    if (restored || !champions.length) return;
+    setRestored(true);
+    const g = restoreGame(champions); if (!g) return;
+    setSelectedRole(g.role); setAllyByRole(g.ally); setEnemyByRole(g.enemy); setMyChampion(g.me);
+    setSide(g.side); setTimerStart(g.timerStart); setKills(g.kills);
+  }, [champions, restored]);
+  useEffect(() => {
+    if (!restored) return;
+    if (!selectedRole) { writeGame(null); return; }
+    writeGame({ role: selectedRole, ally: idsOf(allyByRole), enemy: idsOf(enemyByRole), me: myChampion ? myChampion.id : null, side, timerStart, kills, savedAt: Date.now() });
+  }, [restored, selectedRole, allyByRole, enemyByRole, myChampion, side, timerStart, kills]);
 
   // Pool : gardé dans ce navigateur (plus de compte Base44)
   useEffect(() => {
@@ -63,7 +105,14 @@ export function useDraftState(champions) {
 
   // ── Actions ──────────────────────────────────────────────
 
+  // Nouveau poste depuis l'accueil = nouvelle partie (l'ancienne draft gardée est oubliée)
   const selectRole = useCallback((role) => {
+    setAllyByRole({ ...EMPTY_BY_ROLE });
+    setEnemyByRole({ ...EMPTY_BY_ROLE });
+    setMyChampion(null);
+    setSide('blue');
+    setTimerStart(null);
+    setKills(EMPTY_KILLS);
     setSelectedRole(role);
     setStep(STEPS.DRAFT);
   }, []);
@@ -106,6 +155,24 @@ export function useDraftState(champions) {
 
   const removeEnemyRole = useCallback((role) => {
     setEnemyByRole(prev => ({ ...prev, [role]: null }));
+  }, []);
+
+  // Revalidation des postes alliés : si mon champion change de poste, mon poste suit
+  const swapAllyRoles = useCallback((roleA, roleB) => {
+    setAllyByRole(prev => ({ ...prev, [roleA]: prev[roleB] || null, [roleB]: prev[roleA] || null }));
+    setSelectedRole(cur => (cur === roleA ? roleB : cur === roleB ? roleA : cur));
+  }, []);
+
+  // Partie en cours chargée depuis le relais Riot (src/lib/liveGame.js)
+  const loadLiveGame = useCallback((g) => {
+    setSelectedRole(g.role);
+    setAllyByRole({ ...EMPTY_BY_ROLE, ...g.allyByRole });
+    setEnemyByRole({ ...EMPTY_BY_ROLE, ...g.enemyByRole });
+    setMyChampion(g.me || null);
+    setSide(g.side || 'blue');
+    setKills(EMPTY_KILLS);
+    setTimerStart(g.elapsed > 0 ? Date.now() - g.elapsed * 1000 : null);
+    setStep(STEPS.MATCHUP);
   }, []);
 
   const swapEnemyRoles = useCallback((roleA, roleB) => {
@@ -173,6 +240,9 @@ export function useDraftState(champions) {
     setMyChampion(null);
     setStep(STEPS.ROLE);
     setSelectedRole(null);
+    setSide('blue');
+    setTimerStart(null);
+    setKills(EMPTY_KILLS);
   }, []);
 
   const savePool = useCallback((pool) => {
@@ -204,6 +274,14 @@ export function useDraftState(champions) {
     setEnemyRole,
     removeEnemyRole,
     swapEnemyRoles,
+    swapAllyRoles,
+    loadLiveGame,
+    side,
+    setSide,
+    timerStart,
+    setTimerStart,
+    kills,
+    setKills,
     addToAlly,
     addToEnemy,
     removeFromAlly,

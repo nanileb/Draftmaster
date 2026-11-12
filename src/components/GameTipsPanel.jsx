@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { generateGameTips, analyzeLaneMatchup } from '@/lib/championEngine';
+import { generateGameTips } from '@/lib/championEngine';
 import ChampionIcon from '@/components/ChampionIcon';
-import { Clock, ShoppingBag, Diamond, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, ShoppingBag, AlertCircle, ChevronDown, ChevronUp, Swords, ListChecks } from 'lucide-react';
+import LanePanel from '@/components/ingame/LanePanel';
+import BuildPanel from '@/components/ingame/BuildPanel';
+import TimingPanel from '@/components/ingame/TimingPanel';
+import { LANE_TAB } from '@/lib/inGame';
 
+// Onglets en jeu : Lane et Timing repris du coach LoL, Build au design du coach, Plan = conseils DraftMaster par phase
 const TAB_CONFIG = [
-  { key: 'phases', label: 'Phases', icon: Clock },
+  { key: 'lane', label: 'Lane', icon: Swords },
   { key: 'build', label: 'Build', icon: ShoppingBag },
-  { key: 'runes', label: 'Runes', icon: Diamond },
-  { key: 'mistakes', label: 'Erreurs', icon: AlertCircle },
+  { key: 'timing', label: 'Timing', icon: Clock },
+  { key: 'plan', label: 'Plan', icon: ListChecks },
 ];
+const TAB_KEY = 'dm_tips_tab';
+const readTab = () => { try { const v = localStorage.getItem(TAB_KEY); return TAB_CONFIG.some(t => t.key === v) ? v : 'lane'; } catch (e) { return 'lane'; } };
 
 const ROLE_LABELS = { TOP: 'Top', JUNGLE: 'Jgl', MID: 'Mid', ADC: 'ADC', SUPPORT: 'Sup' };
 
@@ -29,44 +36,9 @@ function Section({ title, children, defaultOpen = true }) {
   );
 }
 
-// Bloc matchup vs un seul champion adverse
-function MatchupBlock({ myChampion, opponent, role }) {
-  const matchup = analyzeLaneMatchup(myChampion, opponent, role);
-  if (!matchup) return null;
-
-  const advColor =
-    matchup.advantage === 'ally' ? 'text-green-win' :
-    matchup.advantage === 'enemy' ? 'text-red-lose' :
-    'text-gold';
-
-  const advLabel =
-    matchup.advantage === 'ally' ? '✅ Avantage' :
-    matchup.advantage === 'enemy' ? '⚠️ Désavantage' :
-    '⚖️ Neutre';
-
-  return (
-    <div className="glass rounded-xl p-3 space-y-2">
-      {/* Champion header */}
-      <div className="flex items-center gap-2.5">
-        <ChampionIcon champion={opponent} size="sm" />
-        <div>
-          <p className="text-sm font-semibold">{opponent.name}</p>
-          <p className="text-[11px] text-muted-foreground">{opponent.class}</p>
-        </div>
-        <span className={cn('ml-auto text-xs font-bold', advColor)}>{advLabel}</span>
-      </div>
-      {/* Tips */}
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">{matchup.reason}</p>
-        <p className="text-xs text-muted-foreground"><span className="text-foreground font-medium">Timing :</span> {matchup.timing}</p>
-        <p className="text-xs text-primary font-medium">→ {matchup.advice}</p>
-      </div>
-    </div>
-  );
-}
-
-export default function GameTipsPanel({ champion, selectedRole, laneOpponents = [], allyTeam, enemyTeam = [], userPool = [] }) {
-  const [activeTab, setActiveTab] = useState('phases');
+export default function GameTipsPanel({ champion, selectedRole, laneOpponents = [], allyTeam, enemyTeam = [], userPool = [], match, clock, side, setSide, kills, setKills }) {
+  const [activeTab, setTab] = useState(readTab);
+  const setActiveTab = (k) => { setTab(k); try { localStorage.setItem(TAB_KEY, k); } catch (e) { /* rien */ } };
 
   const poolEntry = userPool.find(p => p.championId === champion?.id);
   const isBeginnerInPool = poolEntry?.mastery === 'beginner';
@@ -114,38 +86,32 @@ export default function GameTipsPanel({ champion, selectedRole, laneOpponents = 
               )}
             >
               <Icon className="w-3.5 h-3.5" />
-              {tab.label}
+              {tab.key === 'lane' ? (LANE_TAB[selectedRole] || tab.label) : tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* Phases tab */}
-      {activeTab === 'phases' && (
+      {activeTab === 'lane' && (
+        <div className="animate-slide-up">
+          {match ? <LanePanel match={match} build={tips.build && tips.build.ids} /> : null}
+        </div>
+      )}
+
+      {activeTab === 'build' && (
+        <div className="animate-slide-up">
+          <BuildPanel tips={tips} champion={champion} role={selectedRole} match={match} />
+        </div>
+      )}
+
+      {activeTab === 'timing' && clock && (
+        <div className="animate-slide-up">
+          <TimingPanel clock={clock} match={match} side={side} setSide={setSide} kills={kills} setKills={setKills} role={selectedRole} />
+        </div>
+      )}
+
+      {activeTab === 'plan' && (
         <div className="space-y-3 animate-slide-up">
-
-          {/* Matchups vs vis-à-vis */}
-          {laneOpponents.length > 0 && (
-            <Section title={`⚔️ Vs ${laneOpponents.map(o => o.name).join(' & ')}`} defaultOpen={true}>
-              <div className="space-y-2 pt-1">
-                {laneOpponents.map(opp => (
-                  <MatchupBlock key={opp.id} myChampion={champion} opponent={opp} role={selectedRole} />
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {tips.lane?.length > 0 && (
-            <Section title="🛡️ Plan de lane" defaultOpen={true}>
-              {tips.lane.map((tip, i) => (
-                <div key={i} className="flex gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <p className="text-sm text-muted-foreground">{tip}</p>
-                </div>
-              ))}
-            </Section>
-          )}
-
           <Section title="⚡ Début de partie" defaultOpen={true}>
             {tips.early.map((tip, i) => (
               <div key={i} className="flex gap-2">
@@ -170,79 +136,14 @@ export default function GameTipsPanel({ champion, selectedRole, laneOpponents = 
               </div>
             ))}
           </Section>
-        </div>
-      )}
-
-      {/* Build tab */}
-      {activeTab === 'build' && (
-        <div className="space-y-3 animate-slide-up">
-          <div className="glass rounded-xl p-4 space-y-3">
-            {tips.build.source && <p className="text-[11px] text-muted-foreground italic">{tips.build.source}</p>}
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Départ</p>
-              <span className="text-sm font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-lg inline-block">
-                {tips.build.starter}
-              </span>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Objets principaux</p>
-              <div className="flex flex-wrap gap-2">
-                {tips.build.core.map((item, i) => (
-                  <span key={i} className="text-sm font-medium bg-gold/10 text-gold px-3 py-1.5 rounded-lg">
-                    {item}
-                  </span>
-                ))}
+          <Section title="🚫 Erreurs fréquentes">
+            {tips.commonMistakes.map((mistake, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-lose flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">{mistake}</p>
               </div>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Situationnels</p>
-              <div className="flex flex-wrap gap-2">
-                {tips.build.situational.map((item, i) => (
-                  <span key={i} className="text-sm text-muted-foreground bg-secondary px-3 py-1.5 rounded-lg">
-                    {item}
-                  </span>
-                ))}
-                {tips.build.situational.length === 0 && (
-                  <span className="text-xs text-muted-foreground">Rien de particulier contre cette compo : le build principal suffit.</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Runes tab */}
-      {activeTab === 'runes' && (
-        <div className="space-y-3 animate-slide-up">
-          <div className="glass rounded-xl p-4 space-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Keystone</p>
-              <span className="text-base font-bold text-primary">{tips.runes.keystone}</span>
-            </div>
-            <div className="flex gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Primaire</p>
-                <span className="text-sm font-medium">{tips.runes.primary}</span>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Secondaire</p>
-                <span className="text-sm font-medium">{tips.runes.secondary}</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground italic">{tips.runes.description}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Mistakes tab */}
-      {activeTab === 'mistakes' && (
-        <div className="space-y-2 animate-slide-up">
-          {tips.commonMistakes.map((mistake, i) => (
-            <div key={i} className="glass rounded-xl p-3 flex items-start gap-3">
-              <AlertCircle className="w-4 h-4 text-red-lose flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground">{mistake}</p>
-            </div>
-          ))}
+            ))}
+          </Section>
         </div>
       )}
     </div>
