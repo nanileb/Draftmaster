@@ -37,12 +37,12 @@ function DraftCard({ draft, champions, onClick }) {
           <div className={cn('rounded-full px-3 py-2 flex flex-col items-center justify-center', 
             draft.draftScore >= 80 ? 'bg-green-win/20' : draft.draftScore >= 65 ? 'bg-gold/20' : 'bg-primary/20')}>
             <span className={cn('font-grotesk font-extrabold text-sm leading-none', scoreColor)}>{draft.draftScore}</span>
-            <span className="text-[9px] text-muted-foreground">score</span>
+            <span className="text-[11px] text-muted-foreground">score</span>
           </div>
           <div className={cn('rounded-full px-3 py-2 flex flex-col items-center justify-center',
             draft.winRate >= 55 ? 'bg-green-win/20' : draft.winRate >= 52 ? 'bg-gold/20' : 'bg-secondary/30')}>
             <span className={cn('font-grotesk font-extrabold text-sm leading-none', winRateColor)}>{draft.winRate}%</span>
-            <span className="text-[9px] text-muted-foreground">victoire est.</span>
+            <span className="text-[11px] text-muted-foreground">victoire est.</span>
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@ function DraftCard({ draft, champions, onClick }) {
             />
           ) : (
             <div key={i} className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center">
-              <span className="text-[8px] text-muted-foreground">{name?.slice(0, 2)}</span>
+              <span className="text-[11px] text-muted-foreground">{name?.slice(0, 2)}</span>
             </div>
           );
         })}
@@ -114,10 +114,10 @@ export default function BestDrafts({ champions, version, onClose }) {
   useEffect(() => { loadDrafts(); }, [loadDrafts]);
 
   return (
-    <div className="flex flex-col bg-background animate-fade-in" style={{ height: 'calc(100dvh - 64px - env(safe-area-inset-bottom, 0px))' }}>
+    <div className="flex flex-col bg-background animate-fade-in" style={{ height: '100dvh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-background/90 backdrop-blur-lg shrink-0">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-secondary">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-secondary" aria-label="Fermer">
           <X className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -155,7 +155,7 @@ export default function BestDrafts({ champions, version, onClose }) {
             {!loading && drafts.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-10">Les statistiques des meilleurs joueurs ne sont pas disponibles pour l'instant (connexion ?). Tire vers le bas pour réessayer.</p>
             )}
-            {info?.source && <p className="text-[10px] text-muted-foreground/60 -mt-1 pb-1">Source : {info.source}</p>}
+            {info?.source && <p className="text-[11px] text-muted-foreground/60 -mt-1 pb-1">Source : {info.source}</p>}
             {drafts.map((draft, i) => (
               <DraftCard
                 key={i}

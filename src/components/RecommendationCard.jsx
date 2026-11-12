@@ -16,12 +16,12 @@ function ScoreBadge({ score, large = false }) {
     return (
       <div className={cn('flex flex-col items-center justify-center rounded-full border w-12 h-12 shrink-0', bg, ring)} title="Victoire estimée">
         <span className={cn('font-grotesk font-bold text-sm leading-none', color)}>{pct}%</span>
-        <span className="text-[8px] text-muted-foreground leading-none mt-0.5">est.</span>
+        <span className="text-[11px] text-muted-foreground leading-none mt-0.5">est.</span>
       </div>
     );
   }
   return (
-    <span className={cn('text-[10px] font-grotesk font-bold px-1.5 py-0.5 rounded-full border shrink-0', bg, ring, color)} title="Victoire estimée">
+    <span className={cn('text-[11px] font-grotesk font-bold px-1.5 py-0.5 rounded-full border shrink-0', bg, ring, color)} title="Victoire estimée">
       {pct}%
     </span>
   );
@@ -66,7 +66,7 @@ function ChampRec({ champion, onClick, variant = 'default', userPool = [], selec
             </span>
             {variant === 'best' && <Star className="w-3.5 h-3.5 text-gold fill-gold" />}
             {masteryInfo && (
-              <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-medium', masteryInfo.color)}>
+              <span className={cn('text-[11px] px-2 py-0.5 rounded-full font-medium', masteryInfo.color)}>
                 {masteryInfo.label}
               </span>
             )}
@@ -91,7 +91,7 @@ function ChampRec({ champion, onClick, variant = 'default', userPool = [], selec
           {champion.reason && (
             <div className="mt-1.5">
               <span className={cn(
-                'text-[10px] px-2 py-0.5 rounded-full font-medium',
+                'inline-block text-[11px] leading-snug px-2 py-0.5 rounded-lg font-medium',
                 variant === 'best'
                   ? 'bg-primary/15 text-primary'
                   : 'bg-secondary text-muted-foreground'
@@ -155,7 +155,7 @@ export default function RecommendationCard({ recommendations, onSelectChampion, 
                   <ChampionIcon champion={c} size="sm" />
                   <div>
                     <span className="text-sm font-medium text-muted-foreground">{c.name}</span>
-                    <p className="text-[10px] text-gold">{c.riskReason || 'Déconseillé vs cette compo'}</p>
+                    <p className="text-[11px] text-gold">{c.riskReason || 'Déconseillé vs cette compo'}</p>
                   </div>
                 </div>
               </div>

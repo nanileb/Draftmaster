@@ -59,7 +59,7 @@ export default function ShareProfile({ userPool = [] }) {
                     placeholder="Pseudo" className="w-full p-2.5 rounded-lg bg-secondary border border-border text-sm" />
                 </div>
                 <p className="text-xs text-muted-foreground text-center">Ton ami ouvre le lien, ou scanne le QR code ci-dessous avec l'appareil photo de son téléphone : ton pool ({count} champion{count > 1 ? 's' : ''}) s'ajoute à ses joueurs.</p>
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-[10px] font-mono break-all text-primary selectable max-h-16 overflow-y-auto">{url}</div>
+                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-[11px] font-mono break-all text-primary selectable max-h-16 overflow-y-auto">{url}</div>
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={handleCopy} className={cn('py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2', copied ? 'bg-green-win text-white' : 'bg-secondary text-foreground')}>
                     <Copy className="w-4 h-4" />{copied ? 'Copié !' : 'Copier'}
@@ -70,7 +70,7 @@ export default function ShareProfile({ userPool = [] }) {
                 </div>
                 {/* QR code sous le bouton de partage (demande d'origine) */}
                 {qr && <img src={qr} alt="QR code du lien de partage" className="mx-auto rounded-xl border border-border w-48 h-48" />}
-                <p className="text-[10px] text-muted-foreground/70 text-center">Le lien contient une copie de ton pool à cet instant : renvoie-le si ton pool change.</p>
+                <p className="text-[11px] text-muted-foreground/70 text-center">Le lien contient une copie de ton pool à cet instant : renvoie-le si ton pool change.</p>
               </>
             )}
             <button onClick={() => setShowModal(false)} className="w-full bg-secondary text-foreground py-2 rounded-lg font-semibold text-sm">Fermer</button>

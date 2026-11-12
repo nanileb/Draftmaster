@@ -58,7 +58,7 @@ export default function ChampionPicker({
     <div className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-safe pt-4 pb-3 border-b border-border">
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary transition-colors">
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary transition-colors" aria-label="Fermer">
           <X className="w-5 h-5" />
         </button>
         <h2 className="font-grotesk font-semibold text-lg flex-1">{title}</h2>
@@ -141,7 +141,7 @@ export default function ChampionPicker({
                   poolMastery={poolEntry?.mastery}
                   showName={false}
                 />
-                <span className="text-[9px] text-muted-foreground text-center leading-tight w-14 truncate">
+                <span className="text-[11px] text-muted-foreground text-center leading-tight w-14 truncate">
                   {c.name}
                 </span>
               </div>

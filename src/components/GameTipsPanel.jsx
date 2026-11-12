@@ -51,7 +51,7 @@ function MatchupBlock({ myChampion, opponent, role }) {
         <ChampionIcon champion={opponent} size="sm" />
         <div>
           <p className="text-sm font-semibold">{opponent.name}</p>
-          <p className="text-[10px] text-muted-foreground">{opponent.class}</p>
+          <p className="text-[11px] text-muted-foreground">{opponent.class}</p>
         </div>
         <span className={cn('ml-auto text-xs font-bold', advColor)}>{advLabel}</span>
       </div>
@@ -107,7 +107,7 @@ export default function GameTipsPanel({ champion, selectedRole, laneOpponents = 
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all text-xs font-medium',
+                'flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg transition-all text-xs font-medium',
                 activeTab === tab.key
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'

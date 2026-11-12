@@ -37,9 +37,9 @@ function EloDisplay({ rankedStats }) {
                 <span className={cn('text-sm font-bold capitalize', tierColor)}>
                   {q.tier.charAt(0) + q.tier.slice(1).toLowerCase()} {q.rank}
                 </span>
-                <span className="text-[10px] text-muted-foreground">{q.leaguePoints} LP</span>
+                <span className="text-[11px] text-muted-foreground">{q.leaguePoints} LP</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <span>{label}</span>
                 <span>•</span>
                 <span>{q.wins}V {q.losses}D</span>
@@ -93,10 +93,10 @@ function ParticipantRow({ p, ddVersion }) {
         className={cn('w-6 h-6 rounded', p.isMe && 'ring-1 ring-primary')}
         onError={e => { e.target.style.display = 'none'; }}
       />
-      <span className={cn('text-[10px] w-20 truncate', p.isMe ? 'text-primary' : 'text-muted-foreground')}>
+      <span className={cn('text-[11px] w-20 truncate', p.isMe ? 'text-primary' : 'text-muted-foreground')}>
         {p.summonerName || p.championName}
       </span>
-      <span className="text-[10px] text-muted-foreground ml-auto">
+      <span className="text-[11px] text-muted-foreground ml-auto">
         {p.kills}/{p.deaths}/{p.assists}
       </span>
     </div>
@@ -124,7 +124,7 @@ function MatchCard({ match, ddVersion }) {
             className="w-12 h-12 rounded-xl object-cover border border-border"
             onError={e => { e.target.style.display = 'none'; }}
           />
-          <span className="absolute -bottom-1 -right-1 text-[9px] bg-card rounded px-0.5 font-bold border border-border">
+          <span className="absolute -bottom-1 -right-1 text-[11px] bg-card rounded px-0.5 font-bold border border-border">
             {match.level}
           </span>
         </div>
@@ -135,9 +135,9 @@ function MatchCard({ match, ddVersion }) {
             <span className={cn('text-xs font-bold', match.win ? 'text-green-win' : 'text-red-lose')}>
               {match.win ? 'Victoire' : 'Défaite'}
             </span>
-            <span className="text-[10px] text-muted-foreground">{match.gameDuration}</span>
+            <span className="text-[11px] text-muted-foreground">{match.gameDuration}</span>
             {match.role && ROLE_LABELS[match.role] && (
-              <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
+              <span className="text-[11px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
                 {ROLE_LABELS[match.role]}
               </span>
             )}
@@ -149,8 +149,8 @@ function MatchCard({ match, ddVersion }) {
             <KDABadge kills={match.kills} deaths={match.deaths} assists={match.assists} />
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-muted-foreground">{match.cs} CS ({match.csPerMin}/min)</span>
-            <span className="text-[10px] text-muted-foreground">Vision: {match.visionScore}</span>
+            <span className="text-[11px] text-muted-foreground">{match.cs} CS ({match.csPerMin}/min)</span>
+            <span className="text-[11px] text-muted-foreground">Vision: {match.visionScore}</span>
           </div>
         </div>
 
@@ -175,7 +175,7 @@ function MatchCard({ match, ddVersion }) {
             <div>
               <div className="flex items-center gap-1 mb-1.5">
                 <Shield className="w-3 h-3 text-blue-info" />
-                <span className="text-[10px] font-semibold text-blue-info uppercase tracking-wider">Alliés</span>
+                <span className="text-[11px] font-semibold text-blue-info uppercase tracking-wider">Alliés</span>
               </div>
               {match.allies.map((p, i) => (
                 <ParticipantRow key={i} p={p} ddVersion={ddVersion} />
@@ -184,14 +184,14 @@ function MatchCard({ match, ddVersion }) {
             <div>
               <div className="flex items-center gap-1 mb-1.5">
                 <Sword className="w-3 h-3 text-red-lose" />
-                <span className="text-[10px] font-semibold text-red-lose uppercase tracking-wider">Ennemis</span>
+                <span className="text-[11px] font-semibold text-red-lose uppercase tracking-wider">Ennemis</span>
               </div>
               {match.enemies.map((p, i) => (
                 <ParticipantRow key={i} p={{ ...p, isMe: false }} ddVersion={ddVersion} />
               ))}
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-border flex gap-4 text-[10px] text-muted-foreground">
+          <div className="mt-2 pt-2 border-t border-border flex gap-4 text-[11px] text-muted-foreground">
             <span>Dégâts: {match.damageDealt?.toLocaleString()}</span>
             <span>Or: {match.goldEarned?.toLocaleString()}</span>
             <span>{match.gameDate}</span>
@@ -245,7 +245,7 @@ function SettingsPanel() {
             <input className={field} value={form.coachBase} onChange={e => set('coachBase', e.target.value)} placeholder={COACH_BASE_DEFAULT} />
           </label>
           <button onClick={save} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">Enregistrer</button>
-          <p className="text-[10px] text-muted-foreground leading-snug">Tout est gardé dans ce navigateur. La clé Riot reste dans le relais, jamais dans l'application.</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">Tout est gardé dans ce navigateur. La clé Riot reste dans le relais, jamais dans l'application.</p>
         </div>
       )}
     </div>
@@ -360,7 +360,7 @@ export default function ProfilePage() {
               ) : (
                 <button
                   onClick={() => { setEditRiotId(''); setIsEditing(true); }}
-                  className="flex-1 text-left text-sm text-muted-foreground"
+                  className="flex-1 text-left text-sm text-muted-foreground py-3"
                 >
                   Ajouter ton Riot ID (Pseudo#EUW)
                 </button>

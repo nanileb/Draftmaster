@@ -11,9 +11,9 @@ const ROLE_LABELS = {
 function StatCard({ label, value, sub, color = 'text-foreground' }) {
   return (
     <div className="glass rounded-xl p-3 border border-border flex flex-col gap-0.5">
-      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
+      <span className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</span>
       <span className={cn('text-xl font-bold font-grotesk', color)}>{value}</span>
-      {sub && <span className="text-[10px] text-muted-foreground">{sub}</span>}
+      {sub && <span className="text-[11px] text-muted-foreground">{sub}</span>}
     </div>
   );
 }
@@ -37,7 +37,7 @@ function ChampionPoolCard({ champ, ddVersion }) {
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">{champ.championName}</span>
           {champ.role && ROLE_LABELS[champ.role] && (
-            <span className="text-[10px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded-full">
+            <span className="text-[11px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded-full">
               {ROLE_LABELS[champ.role]}
             </span>
           )}
@@ -277,7 +277,7 @@ export default function AnalysisTab({ matches, ddVersion, champions, rankedStats
             {aiTips.globalAdvice && (
               <TipCard icon={Trophy} title="Conseil global" text={aiTips.globalAdvice} color="text-gold" />
             )}
-            {aiTips.source && <p className="text-[10px] text-muted-foreground italic leading-snug">{aiTips.source}</p>}
+            {aiTips.source && <p className="text-[11px] text-muted-foreground italic leading-snug">{aiTips.source}</p>}
             {aiTips.poolSuggestions && aiTips.poolSuggestions.length > 0 && (
               <div className="glass rounded-xl border border-border p-3">
                 <div className="flex items-center gap-2 mb-2">

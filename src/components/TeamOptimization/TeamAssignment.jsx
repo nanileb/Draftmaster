@@ -103,14 +103,14 @@ export default function TeamAssignment({
                         ) : (
                           <span
                             key={champ}
-                            className="text-[10px] bg-secondary/50 px-1.5 py-0.5 rounded text-muted-foreground"
+                            className="text-[11px] bg-secondary/50 px-1.5 py-0.5 rounded text-muted-foreground"
                           >
                             {champ.slice(0, 2)}
                           </span>
                         );
                       })}
                       {(assignedPlayer.pools?.[role]?.length || 0) > 3 && (
-                        <span className="text-[10px] text-muted-foreground px-1">
+                        <span className="text-[11px] text-muted-foreground px-1">
                           +{(assignedPlayer.pools?.[role]?.length || 0) - 3}
                         </span>
                       )}

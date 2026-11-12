@@ -28,7 +28,7 @@ function MatchupRow({ allyChamp, enemyChamp, role, roleKey }) {
             <ChampionIcon champion={allyChamp} size="xs" />
           ) : (
             <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center">
-              <span className="text-[9px] text-muted-foreground">{role}</span>
+              <span className="text-[11px] text-muted-foreground">{role}</span>
             </div>
           )}
           <span className="text-xs font-medium text-primary">
@@ -50,7 +50,7 @@ function MatchupRow({ allyChamp, enemyChamp, role, roleKey }) {
             <ChampionIcon champion={enemyChamp} size="xs" />
           ) : (
             <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center">
-              <span className="text-[9px] text-muted-foreground">{role}</span>
+              <span className="text-[11px] text-muted-foreground">{role}</span>
             </div>
           )}
         </div>
@@ -60,7 +60,7 @@ function MatchupRow({ allyChamp, enemyChamp, role, roleKey }) {
         <div className="space-y-1">
           <p className="text-[11px] text-muted-foreground">{matchup.reason}</p>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">🕐 {matchup.timing}</span>
+            <span className="text-[11px] text-muted-foreground">🕐 {matchup.timing}</span>
           </div>
           <p className={cn('text-[11px] font-medium', advColor)}>{matchup.advice}</p>
         </div>

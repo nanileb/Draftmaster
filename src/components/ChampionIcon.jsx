@@ -21,9 +21,9 @@ export default function ChampionIcon({
   const [imgError, setImgError] = useState(false);
 
   const sizes = {
-    xs: 'w-8 h-8 text-[8px]',
-    sm: 'w-10 h-10 text-[9px]',
-    md: 'w-14 h-14 text-[10px]',
+    xs: 'w-8 h-8 text-[11px]',
+    sm: 'w-10 h-10 text-[11px]',
+    md: 'w-14 h-14 text-[11px]',
     lg: 'w-16 h-16 text-xs',
     xl: 'w-20 h-20 text-sm',
   };
@@ -72,7 +72,7 @@ export default function ChampionIcon({
         )}
       </div>
       {showName && champion && (
-        <span className="text-[9px] text-muted-foreground text-center leading-tight max-w-[56px] truncate">
+        <span className="text-[11px] text-muted-foreground text-center leading-tight max-w-[56px] truncate">
           {champion.name}
         </span>
       )}

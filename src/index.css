@@ -77,9 +77,11 @@
     -webkit-user-select: text;
     user-select: text;
   }
-  input, textarea {
+  input, textarea, select {
     -webkit-user-select: text;
     user-select: text;
+    /* 16 px minimum : en dessous, Safari sur iPhone zoome la page à la saisie */
+    font-size: 16px !important;
   }
 }
 
@@ -125,6 +127,9 @@
     transform: scale(0.95);
   }
 
+  .pt-safe { padding-top: max(1rem, env(safe-area-inset-top, 0px)) !important; }
+  .pb-safe { padding-bottom: max(2rem, calc(1rem + env(safe-area-inset-bottom, 0px))) !important; }
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
@@ -139,10 +144,10 @@
 
   /* ── Screen slide animations ── */
   .screen-slide-enter {
-    animation: screenSlideIn 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: screenSlideIn 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
   }
   .screen-slide-back {
-    animation: screenSlideBack 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: screenSlideBack 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
   }
   @keyframes screenSlideIn {
     from { transform: translateX(100%); opacity: 0.6; }
@@ -152,6 +157,12 @@
     from { transform: translateX(-30%); opacity: 0.6; }
     to   { transform: translateX(0);    opacity: 1;   }
   }
+
+  /* Agrandit la zone tactile d'un petit bouton (croix) sans changer son dessin */
+  .hit-area::before { content: ''; position: absolute; inset: -12px; }
+
+  /* Indique qu'une rangée défile vers la droite */
+  .fade-right { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
 
   /* Minimum 44px tap target helper */
   .tap-target {

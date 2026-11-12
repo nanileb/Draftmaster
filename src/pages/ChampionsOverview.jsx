@@ -27,7 +27,7 @@ function getChampionById(champions, id) {
 function TierBadge({ tier }) {
   const style = TIER_STYLES[tier] || TIER_STYLES['C'];
   return (
-    <span className={cn('text-[9px] font-grotesk font-bold px-1.5 py-0.5 rounded-full border border-transparent', style.badge)}>
+    <span className={cn('text-[11px] font-grotesk font-bold px-1.5 py-0.5 rounded-full border border-transparent', style.badge)}>
       {tier}
     </span>
   );
@@ -62,10 +62,10 @@ function ChampCard({ champ, stat, onClick }) {
         </div>
       </div>
       <div className="flex flex-col items-center gap-0.5 w-full">
-        <span className="text-[10px] font-medium truncate w-full text-center leading-tight">{champ.name}</span>
+        <span className="text-[11px] font-medium truncate w-full text-center leading-tight">{champ.name}</span>
         <TierBadge tier={tier} />
         {stat?.winRate && (
-          <span className="text-[9px] text-muted-foreground">{stat.winRate.toFixed(1)}%</span>
+          <span className="text-[11px] text-muted-foreground">{stat.winRate.toFixed(1)}%</span>
         )}
       </div>
     </button>
@@ -136,13 +136,13 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
         </div>
 
         {/* Role tabs */}
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 pr-6 fade-right">
           {ROLES.map(role => (
             <button
               key={role}
               onClick={() => setActiveRole(role)}
               className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors',
+                'px-3 py-2.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors',
                 activeRole === role
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
@@ -158,7 +158,7 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
           <button
             onClick={() => setTierFilter(null)}
             className={cn(
-              'px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
+              'px-3 py-2.5 rounded-full text-xs font-medium transition-colors',
               !tierFilter ? 'bg-foreground text-background' : 'bg-secondary text-muted-foreground'
             )}
           >
@@ -171,7 +171,7 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
                 key={t}
                 onClick={() => setTierFilter(tierFilter === t ? null : t)}
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-bold transition-colors border',
+                  'px-3 py-2.5 rounded-full text-xs font-bold transition-colors border',
                   tierFilter === t ? `${style.badge} ${style.border}` : 'bg-secondary text-muted-foreground border-transparent'
                 )}
               >
@@ -184,7 +184,7 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-10">
-        <p className="text-[10px] text-muted-foreground mb-3 leading-snug">{sourceNote}</p>
+        <p className="text-[11px] text-muted-foreground mb-3 leading-snug">{sourceNote}</p>
         {loadingStats ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />

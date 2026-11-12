@@ -61,7 +61,7 @@ export default function DraftScoreBar({ score, winProbability, scoreInfo, compac
             style={{ left: '50%' }}
           />
         </div>
-        <div className="flex justify-between text-[10px] text-muted-foreground">
+        <div className="flex justify-between text-[11px] text-muted-foreground">
           <span>Ennemi {100 - winProbability}%</span>
           <span>Allié {winProbability}%</span>
         </div>

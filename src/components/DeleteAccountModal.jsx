@@ -54,7 +54,7 @@ export default function DeleteAccountModal({ onClose }) {
                   Cette action est irréversible. Tout ce que DraftMaster garde dans ce navigateur (pool, joueurs, amis importés, réglages) sera effacé. Rien n'est stocké ailleurs.
                 </p>
               </div>
-              <button onClick={onClose} className="p-1.5 rounded-full hover:bg-secondary -mt-1 -mr-1">
+              <button onClick={onClose} className="p-1.5 rounded-full hover:bg-secondary -mt-1 -mr-1" aria-label="Fermer">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>

@@ -48,9 +48,9 @@ function ChampionConfigModal({ champion, entry, onSave, onRemove, onClose }) {
   const selectedRoleKeys = Object.keys(roles);
 
   return (
-    <div className="fixed inset-0 z-60 flex items-end justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60" onClick={onClose}>
       <div
-        className="w-full max-w-md bg-card rounded-t-2xl p-5 space-y-5 animate-slide-up" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px) + 64px)' }}
+        className="w-full max-w-md bg-card rounded-t-2xl p-5 space-y-5 animate-slide-up" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ function ChampionConfigModal({ champion, entry, onSave, onRemove, onClose }) {
             <p className="font-grotesk font-bold text-base">{champion.name}</p>
             <p className="text-xs text-muted-foreground">{champion.title}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary" aria-label="Fermer">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -215,7 +215,7 @@ export default function PoolManager({ champions, pool, onSave, onClose, embedded
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-border sticky top-0 bg-background/95 backdrop-blur-lg z-10">
         {!embedded && (
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary tap-target">
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary tap-target" aria-label="Fermer">
             <X className="w-5 h-5" />
           </button>
         )}
@@ -313,7 +313,7 @@ export default function PoolManager({ champions, pool, onSave, onClose, embedded
 
       {/* My Pool drawer */}
       {showMyPool && (
-        <div className="fixed inset-0 z-60 flex items-end justify-center bg-black/60" onClick={() => setShowMyPool(false)}>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60" onClick={() => setShowMyPool(false)}>
           <div className="w-full max-w-md bg-card rounded-t-2xl pb-8 animate-slide-up max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
               <p className="font-grotesk font-semibold flex-1">Mes champions ({localPool.length})</p>

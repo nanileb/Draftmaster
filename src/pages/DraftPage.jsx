@@ -62,7 +62,7 @@ export default function DraftPage({
     <div className="flex flex-col min-h-screen">
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background/80 backdrop-blur-lg z-10">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-secondary tap-target flex items-center justify-center">
+        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-secondary tap-target flex items-center justify-center" aria-label="Retour">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function DraftPage({
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all text-xs font-medium',
+                  'flex-1 flex items-center justify-center gap-1.5 py-3 rounded-lg transition-all text-xs font-medium',
                   activeTab === tab.key
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'

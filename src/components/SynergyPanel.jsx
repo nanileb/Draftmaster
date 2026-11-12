@@ -17,7 +17,7 @@ export default function SynergyPanel({ synergies, winCondition }) {
               <div className="flex items-center gap-2">
                 <span className={cn('text-sm font-semibold', s.color)}>{s.type}</span>
                 {i === 0 && winCondition === s.type && (
-                  <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
+                  <span className="text-[11px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
                     Win con.
                   </span>
                 )}

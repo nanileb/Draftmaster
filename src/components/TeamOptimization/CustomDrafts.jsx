@@ -188,7 +188,7 @@ export default function CustomDrafts({ teamAssignment, champions, version }) {
                   <p className="text-xs text-muted-foreground font-semibold mb-1.5">Synergies</p>
                   <div className="flex flex-wrap gap-1">
                     {draft.synergies.map((s, i) => (
-                      <span key={i} className="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded">
+                      <span key={i} className="text-[11px] bg-primary/20 text-primary px-2 py-1 rounded">
                         {s}
                       </span>
                     ))}
@@ -201,7 +201,7 @@ export default function CustomDrafts({ teamAssignment, champions, version }) {
                 {draft.strengths?.length > 0 && (
                   <div>
                     <p className="text-xs text-green-win font-semibold mb-1">Forces</p>
-                    <ul className="text-[10px] text-foreground/80 space-y-0.5">
+                    <ul className="text-[11px] text-foreground/80 space-y-0.5">
                       {draft.strengths.map((s, i) => (
                         <li key={i} className="flex gap-1">
                           <span className="text-green-win">+</span>
@@ -214,7 +214,7 @@ export default function CustomDrafts({ teamAssignment, champions, version }) {
                 {draft.weaknesses?.length > 0 && (
                   <div>
                     <p className="text-xs text-red-lose font-semibold mb-1">Faiblesses</p>
-                    <ul className="text-[10px] text-foreground/80 space-y-0.5">
+                    <ul className="text-[11px] text-foreground/80 space-y-0.5">
                       {draft.weaknesses.map((w, i) => (
                         <li key={i} className="flex gap-1">
                           <span className="text-red-lose">−</span>

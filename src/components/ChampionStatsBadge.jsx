@@ -17,9 +17,9 @@ export default function ChampionStatsBadge({ championId, role }) {
   const tierStyle = TIER_STYLES[stats.tier] || TIER_STYLES['B'];
   return (
     <div className="flex items-center gap-1.5">
-      <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded border', tierStyle)}>{stats.tier}</span>
+      <span className={cn('text-[11px] font-bold px-1.5 py-0.5 rounded border', tierStyle)}>{stats.tier}</span>
       {stats.winRate != null && (
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[11px] text-muted-foreground">
           {stats.winRate.toFixed(1)}% WR{stats.games ? ` · ${stats.games} parties` : ''}
         </span>
       )}

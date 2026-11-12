@@ -56,13 +56,14 @@ export default function RoleTeamSlots({
                     {!isMyRole && (
                       <button
                         onClick={() => onRemoveAllyRole(role.key)}
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center text-primary"
+                        aria-label="Retirer ce champion"
+                        className="hit-area absolute -top-1 -right-1 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center text-primary"
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
                     )}
                     {isMyRole && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] font-bold px-1 rounded-full whitespace-nowrap">
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] font-bold px-1.5 rounded-full whitespace-nowrap">
                         Moi
                       </div>
                     )}
@@ -71,6 +72,7 @@ export default function RoleTeamSlots({
                   <button
                     onClick={() => !isMyRole && setPickerRole(role.key)}
                     disabled={isMyRole}
+                    aria-label="Ajouter un champion"
                     className={cn(
                       'w-10 h-10 rounded-lg border-2 border-dashed flex items-center justify-center transition-all active:scale-95',
                       isMyRole

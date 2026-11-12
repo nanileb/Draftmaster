@@ -49,8 +49,9 @@ export default function TeamSlots({
                   />
                   <button
                     onClick={() => onRemove(champ.id)}
+                    aria-label="Retirer ce champion"
                     className={cn(
-                      'absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center',
+                      'hit-area absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center',
                       'bg-background border border-border shadow-sm',
                       isAlly ? 'text-primary' : 'text-red-lose'
                     )}
@@ -64,6 +65,7 @@ export default function TeamSlots({
               ) : (
                 <button
                   onClick={onAdd}
+                  aria-label="Ajouter un champion"
                   className={cn(
                     'w-full h-10 rounded-lg border-2 border-dashed flex items-center justify-center',
                     'transition-all active:scale-95',

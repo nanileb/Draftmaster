@@ -43,7 +43,7 @@ function ScoreRing({ score }) {
   return (
     <div className={cn('flex flex-col items-center justify-center w-16 h-16 rounded-full border-2 shrink-0', color)}>
       <span className="font-grotesk font-extrabold text-xl leading-none">{score}</span>
-      <span className="text-[9px] leading-none opacity-70 mt-0.5">score</span>
+      <span className="text-[11px] leading-none opacity-70 mt-0.5">score</span>
     </div>
   );
 }
@@ -65,7 +65,7 @@ export default function BestDraftDetail({ draft, champions, onClose }) {
     <div className="fixed inset-0 z-50 flex flex-col bg-background animate-fade-in overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 border-b border-border bg-background/90 backdrop-blur-lg">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-secondary">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-secondary" aria-label="Fermer">
           <X className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
@@ -129,7 +129,7 @@ export default function BestDraftDetail({ draft, champions, onClose }) {
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center shrink-0">
-                        <span className="text-[9px] text-muted-foreground">{champName?.slice(0, 2)}</span>
+                        <span className="text-[11px] text-muted-foreground">{champName?.slice(0, 2)}</span>
                       </div>
                     )}
                     <span className="font-grotesk font-semibold text-sm">{champName || '—'}</span>

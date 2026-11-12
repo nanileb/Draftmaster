@@ -111,7 +111,7 @@ export default function MatchupAssignment({
       </div>
 
       {/* CTA */}
-      <div className="fixed left-0 right-0 p-4 bg-background/90 backdrop-blur-lg border-t border-border" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="fixed left-0 right-0 p-4 bg-background/90 backdrop-blur-lg border-t border-border" style={{ bottom: 0, paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>
         <button
           onClick={onGoToTips}
           disabled={!allAssigned}

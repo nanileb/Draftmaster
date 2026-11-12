@@ -35,7 +35,7 @@ export default function TipsPage({
     <div className="flex flex-col min-h-screen">
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background/80 backdrop-blur-lg z-10">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-secondary tap-target flex items-center justify-center">
+        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-secondary tap-target flex items-center justify-center" aria-label="Retour">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="font-grotesk font-semibold text-sm">Conseils de jeu</span>

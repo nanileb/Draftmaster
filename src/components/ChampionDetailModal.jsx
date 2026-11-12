@@ -30,15 +30,15 @@ function MiniChamp({ idOrName, champions, label }) {
   const champ = getChampionByIdOrName(champions, idOrName);
   if (!champ) return (
     <div className="flex flex-col items-center gap-1">
-      <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-[9px] text-muted-foreground">{idOrName?.slice(0,2)}</div>
-      <span className="text-[9px] text-muted-foreground text-center leading-tight w-12 truncate">{idOrName}</span>
+      <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-[11px] text-muted-foreground">{idOrName?.slice(0,2)}</div>
+      <span className="text-[11px] text-muted-foreground text-center leading-tight w-12 truncate">{idOrName}</span>
     </div>
   );
   return (
     <div className="flex flex-col items-center gap-1">
       <img src={champ.iconUrl} alt={champ.name} className="w-10 h-10 rounded-lg object-cover border border-border" onError={e => { e.target.style.display='none'; }} />
-      <span className="text-[9px] text-muted-foreground text-center leading-tight w-12 truncate">{champ.name}</span>
-      {label && <span className="text-[8px] text-primary font-medium">{label}</span>}
+      <span className="text-[11px] text-muted-foreground text-center leading-tight w-12 truncate">{champ.name}</span>
+      {label && <span className="text-[11px] text-primary font-medium">{label}</span>}
     </div>
   );
 }
@@ -92,25 +92,25 @@ export default function ChampionDetailModal({ champion, role, champions, version
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             {stat?.tier && (
-              <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', TIER_STYLES[stat.tier] || TIER_STYLES['C'])}>
+              <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded-full border', TIER_STYLES[stat.tier] || TIER_STYLES['C'])}>
                 Tier {stat.tier}
               </span>
             )}
             {stat?.winRate != null && (
-              <span className="text-[10px] text-green-win">{stat.winRate.toFixed(1)}% WR</span>
+              <span className="text-[11px] text-green-win">{stat.winRate.toFixed(1)}% WR</span>
             )}
             {stat?.pickRate != null && (
-              <span className="text-[10px] text-muted-foreground">{stat.pickRate.toFixed(1)}% Pick</span>
+              <span className="text-[11px] text-muted-foreground">{stat.pickRate.toFixed(1)}% Pick</span>
             )}
             {stat?.games > 0 && (
-              <span className="text-[10px] text-muted-foreground">{stat.games} parties</span>
+              <span className="text-[11px] text-muted-foreground">{stat.games} parties</span>
             )}
             {!stat && (
-              <span className="text-[10px] text-muted-foreground">Pas de statistiques à ce poste</span>
+              <span className="text-[11px] text-muted-foreground">Pas de statistiques à ce poste</span>
             )}
           </div>
         </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary shrink-0">
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-secondary shrink-0" aria-label="Fermer">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -175,13 +175,13 @@ export default function ChampionDetailModal({ champion, role, champions, version
                         {details.skillOrder.map((key, i) => (
                           <React.Fragment key={i}>
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-[9px] text-muted-foreground">{i + 1}</span>
+                              <span className="text-[11px] text-muted-foreground">{i + 1}</span>
                               <span className={cn('w-7 h-7 rounded-md flex items-center justify-center text-xs font-grotesk font-bold', SPELL_COLORS[key] || 'bg-secondary text-foreground')}>
                                 {key}
                               </span>
                             </div>
                             {i < details.skillOrder.length - 1 && (
-                              <span className="text-muted-foreground text-[10px] mb-0.5">›</span>
+                              <span className="text-muted-foreground text-[11px] mb-0.5">›</span>
                             )}
                           </React.Fragment>
                         ))}

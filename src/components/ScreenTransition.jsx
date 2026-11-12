@@ -7,7 +7,7 @@ import React, { useRef, useEffect } from 'react';
 export default function ScreenTransition({ children, direction = 'forward', id }) {
   const cls = direction === 'back' ? 'screen-slide-back' : 'screen-slide-enter';
   return (
-    <div key={id} className={cls} style={{ willChange: 'transform' }}>
+    <div key={id} className={cls}>
       {children}
     </div>
   );
