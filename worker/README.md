@@ -26,6 +26,10 @@ Les routes `/pool` et `/pools` ont besoin d'un espace Workers KV lié sous le no
 
 L'id se lit dans Cloudflare › Storage & Databases › Workers KV (ou se crée avec `npx wrangler kv namespace create POOLS`). Sans cet espace, la synchro répond `sync_unavailable` et l'application garde la copie du pool contenue dans le lien de partage.
 
+## Relancer un déploiement
+
+Workers Builds redéploie à chaque changement de `main` (ou seulement de `worker/` si les Build watch paths sont réglés). Pour relancer sans rien changer au code : modifier un commentaire d'un fichier de `worker/` et le fusionner, ou, dans Cloudflare, Deployments › dernier build › « … » › Retry.
+
 ## Déployer à la main (sans Workers Builds)
 
 ```bash
