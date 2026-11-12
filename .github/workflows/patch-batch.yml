@@ -1,0 +1,61 @@
+# Batch quotidien « dernier patch » : DraftMaster reste toujours au patch en cours.
+# 1. Vérifie seulement les numéros (patch Data Dragon + état des données du coach) : tools/patch-check.mjs.
+# 2. S'ils diffèrent de ceux enregistrés dans l'application, actualise toute la base publiée avec l'app :
+#    meilleures drafts (public/data/best-drafts.json) et nouveautés du patch (public/data/patch-notes.json),
+#    puis republie le site.
+# Champions, objets, runes, sorts, tier list, synergies et parties sont lus en direct par l'application
+# (Data Dragon, données du coach, relais Riot) : ils suivent le patch sans republication.
+# Aucune clé, aucun secret. Lancement à la main possible (Actions > Batch dernier patch > Run workflow).
+name: Batch dernier patch
+
+on:
+  schedule:
+    - cron: '0 10 * * *'   # 10 h UTC : après la vérification du patch côté coach (4 h) et sa collecte
+    - cron: '0 20 * * *'   # 20 h UTC : rattrape une collecte du coach plus longue ou un patch sorti dans la journée
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Tout actualiser même si le patch n'a pas changé
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write   # pour relancer la publication (un commit du bot ne la déclenche pas tout seul)
+
+concurrency:
+  group: patch-batch
+  cancel-in-progress: false
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vérifier le numéro de patch
+        id: check
+        env:
+          FORCE: ${{ github.event.inputs.force }}
+        run: node tools/patch-check.mjs
+      - name: Recalculer les meilleures drafts
+        if: steps.check.outputs.changed == 'true'
+        run: node tools/best-drafts.mjs
+      - name: Nouveautés du patch
+        if: steps.check.outputs.changed == 'true'
+        run: if [ -f tools/patch-notes.mjs ]; then node tools/patch-notes.mjs; else echo "tools/patch-notes.mjs absent : étape sautée"; fi
+      - name: Enregistrer et republier
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add public/data/best-drafts.json
+          [ -f public/data/patch-notes.json ] && git add public/data/patch-notes.json
+          if git diff --cached --quiet; then echo "Aucun fichier modifié"; exit 0; fi
+          git commit -m "Données du patch ${{ steps.check.outputs.ddragon }}"
+          git pull --rebase origin main && git push
+          gh workflow run deploy.yml --ref main
