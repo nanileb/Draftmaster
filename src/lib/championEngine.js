@@ -511,7 +511,13 @@ const EARLY = {
 function getEarlyAdvice(c, role, T) {
   if (role === 'JUNGLE') return [`Full clear terminé vers 3:00-3:20, puis crabe (${T.scuttle}) du côté où tes lanes ont la priorité`, 'Les buffs réapparaissent 5:00 après leur mort : note l\'heure', `Drake à ${T.dragon}, larves à ${T.grubs} : prépare la vision une minute avant`];
   const p = tipProfile(c, role);
-  return [...(EARLY[p] || EARLY[role + '_Specialist'] || ['Farm safe', 'Joue les objectifs'])];
+  const list = [...(EARLY[p] || EARLY[role + '_Specialist'] || ['Farm safe', 'Joue les objectifs'])];
+  // Contre-recette R3 : pas de conseil de mana pour un champion sans mana (partype de Data Dragon)
+  const partype = (DATA.champs[c.id] || {}).partype;
+  if (partype && partype !== 'Mana' && partype !== 'Mana ') {
+    return list.map(t => /mana/i.test(t) ? t.replace(/Gère ton mana : garde de quoi/i, 'Garde un sort pour').replace(/ et garde du mana pour te défendre/i, ' et garde un sort pour te défendre') : t);
+  }
+  return list;
 }
 function getMidAdvice(c, allyTeam, T, role) {
   const winCond = getWinCondition(detectSynergies(allyTeam || []));
@@ -563,15 +569,23 @@ function getLaneAdvice(ally, enemy, role, build) {
   if (!m) return ['Joue safe, farm et attends les opportunités'];
   const adv = m.advantage === 'ally' ? '✅ Tu as l\'avantage' : m.advantage === 'enemy' ? '⚠️ Tu es désavantagé' : '⚖️ Matchup neutre';
   const tone = !m.measured ? null : m.advantage === 'ally' ? 'aggro' : m.advantage === 'enemy' ? 'safe' : 'even';
-  const out = [`${adv} : ${m.reason}`, `Timing clé : ${m.timing}`, m.advice];
+  const losing = m.advantage === 'enemy';
+  // Contre-recette R1 : jamais d'all-in conseillé dans un duel perdant
+  const AGGRO = /all-in|cherche le kill|force le fight/i;
+  const advice = losing && AGGRO.test(m.advice || '') ? 'Joue les échanges courts et attends ta jungle avant de t\'engager' : m.advice;
+  const out = [`${adv} : ${m.reason}`, `Timing clé : ${m.timing}`, advice];
   const rng = c => ((DATA.champs[c.id] || {}).stats || {}).attackrange >= 300;
-  if (rng(ally) && !rng(enemy)) out.push(`Tu as la portée : touche ${enemy.name} quand il vient last-hit`);
+  // Contre-recette R2 : au support, la cible des échanges est l'ADC adverse qui last-hit, pas le support
+  if (role === 'SUPPORT') {
+    if (rng(ally) && !rng(enemy)) out.push(`Tu as la portée : poke l'ADC adverse quand il vient last-hit, recule quand ${enemy.name} s'avance`);
+    else if (!rng(ally) && rng(enemy)) out.push(`${enemy.name} a la portée : reste derrière tes sbires et engage quand il a gaspillé un sort`);
+  } else if (rng(ally) && !rng(enemy)) out.push(`Tu as la portée : touche ${enemy.name} quand il vient last-hit`);
   else if (!rng(ally) && rng(enemy)) out.push(`${enemy.name} a la portée : farm prudemment et engage quand il a gaspillé un sort`);
   // Téléportation : seulement si le build la prend (C3)
   if (role === 'TOP' && build) {
     if (build.spellIds.includes(12)) out.push('Garde ta Téléportation pour un drake ou un gank');
-    else if (build.spellIds.includes(6)) out.push('Garde ton Fantôme pour un all-in ou une poursuite');
-    else if (build.spellIds.includes(14)) out.push('Embrasement : cherche le kill aux niveaux 2-3 (il réduit aussi ses soins)');
+    else if (build.spellIds.includes(6)) out.push(losing ? 'Garde ton Fantôme pour fuir un gank ou te replacer en combat' : 'Garde ton Fantôme pour un all-in ou une poursuite');
+    else if (build.spellIds.includes(14)) out.push(losing ? 'Embrasement : garde-le pour punir une erreur ou couper ses soins, ne force pas le kill' : 'Embrasement : cherche le kill aux niveaux 2-3 (il réduit aussi ses soins)');
   }
   return coherentPlan(out, tone);
 }
