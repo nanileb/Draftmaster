@@ -4,6 +4,7 @@ import PlayerManagement from '@/components/TeamOptimization/PlayerManagement';
 import TeamAssignment from '@/components/TeamOptimization/TeamAssignment';
 import CustomDrafts from '@/components/TeamOptimization/CustomDrafts';
 import { getPlayers, setPlayers as savePlayers, getPool, poolByRole, getProfile, newId } from '@/lib/localStore';
+import { refreshFriends } from '@/lib/poolSync';
 
 // Joueurs et amis gardés dans ce navigateur. Les « amis » sont les joueurs importés par lien / QR de partage.
 export default function TeamOptimization({ champions, version, onClose, embedded = false }) {
@@ -23,7 +24,7 @@ export default function TeamOptimization({ champions, version, onClose, embedded
       const rolesMap = poolByRole(getPool(), champions);
       setUserPool(Object.values(rolesMap).some(arr => arr.length > 0) ? rolesMap : null);
     };
-    if (champions.length > 0) loadPool();
+    if (champions.length > 0) { loadPool(); refreshFriends(champions); }
     const reload = () => { setAll(getPlayers()); loadPool(); };
     window.addEventListener('friends-updated', reload);
     window.addEventListener('pool-updated', reload);

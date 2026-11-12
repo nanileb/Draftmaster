@@ -56,6 +56,7 @@ Pas de compte. Tout reste sur l'appareil :
 - `dm_players` : joueurs de l'optimisation d'équipe, dont les amis importés ;
 - `dm_profile` : pseudo affiché quand tu partages ton pool ;
 - `dm_settings` : serveur, adresse du relais Riot, adresse des données du coach ;
+- `dm_identity` : id de synchro (public, mis dans le lien de partage) et clé secrète du téléphone ; `dm_sync` : état du dernier envoi ;
 - `riotId` ; copies de secours des données du coach (`dm_coach_*`) et de Data Dragon.
 
 Profil › Mon Pool › « Effacer mes données locales » vide tout.
@@ -93,3 +94,15 @@ src/
 public/                   manifest, service worker, icônes, data/
 tools/                    best-drafts.mjs, spa-404.mjs
 ```
+
+## Synchro des pools entre amis (sans compte)
+
+Le lien de partage (Profil › Partager) contient le pool **et** un id de synchro. Dès qu'on ouvre « Partager », le pool est envoyé au relais Cloudflare (`POST /pool`), puis renvoyé à chaque modification. Chez l'ami, les pools des amis reliés sont relus (`GET /pools`) à l'ouverture de l'app, au retour au premier plan et sur l'onglet Équipe. Code : `src/lib/poolSync.js`.
+
+- Pas de mot de passe : la première écriture réserve l'id pour la clé secrète du téléphone (le relais n'en garde que l'empreinte SHA-256).
+- Changer de téléphone : Partager › « Changer de téléphone » donne un code de récupération `DM-…` à coller sur le nouveau.
+- « Supprimer mes données » efface aussi le pool sur le relais.
+- Sans les routes `/pool` sur le relais, rien ne casse : l'ami garde la copie du pool contenue dans le lien.
+- Les anciens liens (v1, sans id) restent acceptés mais ne se mettent pas à jour.
+
+Le relais a besoin d'un espace Workers KV lié sous le nom `POOLS` (voir `docs/worker-patch/NOTE.md`).

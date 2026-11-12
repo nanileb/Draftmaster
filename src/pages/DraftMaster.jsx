@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { startPoolSync, refreshFriends, schedulePush } from '@/lib/poolSync';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useChampions } from '@/hooks/useChampions';
 import { useGameData } from '@/lib/dataLoader';
@@ -35,6 +36,16 @@ export default function DraftMaster() {
   const [slideDir, setSlideDir] = useState('forward');
   // Remember the last visited path for each tab
   const tabStackRef = useRef({ home: '/home', profile: '/profile', team: '/team' });
+
+  // Synchro des pools entre amis : j'envoie le mien quand il change, je relis ceux des amis au retour dans l'app
+  useEffect(() => { startPoolSync(); }, []);
+  useEffect(() => {
+    if (!champions.length) return;
+    refreshFriends(champions);
+    const onVisible = () => { if (document.visibilityState === 'visible') { refreshFriends(champions); schedulePush(); } };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [champions]);
 
   useEffect(() => {
     const prev = prevPathRef.current;

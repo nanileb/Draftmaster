@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { AlertTriangle, X, Trash2, Loader2 } from 'lucide-react';
 import { clearAll } from '@/lib/localStore';
+import { deleteMyPool } from '@/lib/poolSync';
 
 export default function DeleteAccountModal({ onClose }) {
   const [step, setStep] = useState(1); // 1 = confirm, 2 = deleting, 3 = done
   const [error, setError] = useState(null);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setStep(2);
     setError(null);
+    // Efface aussi mon pool partagé sur le relais (si je l'avais partagé)
+    await deleteMyPool();
     try {
       // Pas de compte : on efface les données gardées dans ce navigateur
       clearAll();

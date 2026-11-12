@@ -4,6 +4,16 @@ import { cn } from '@/lib/utils';
 import AddFriendModal from '../AddFriendModal';
 
 const ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+
+function sinceText(ts) {
+  const m = Math.round((Date.now() - ts) / 60000);
+  if (m < 2) return "à l'instant";
+  if (m < 60) return `il y a ${m} min`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `il y a ${h} h`;
+  const d = Math.round(h / 24);
+  return `il y a ${d} j`;
+}
 const ROLE_LABELS = {
   TOP: 'Top',
   JUNGLE: 'Jungle',
@@ -245,6 +255,10 @@ export default function PlayerManagement({
                   <p className="font-grotesk font-bold text-foreground">{friend.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {friend.pools ? Object.values(friend.pools).reduce((sum, pool) => sum + pool.length, 0) : '—'} champions
+                    {' · '}
+                    {friend.syncId
+                      ? <span className="text-accent">synchro auto{friend.syncedAt ? `, modifié ${sinceText(friend.syncedAt)}` : ''}</span>
+                      : <span>copie de son lien</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -278,6 +292,9 @@ export default function PlayerManagement({
                       </div>
                     </div>
                   ))}
+                  {!friend.syncId && (
+                    <p className="text-[11px] text-muted-foreground pt-1">Ce pool ne se met pas à jour tout seul : demande à {friend.name} de te renvoyer son lien de partage depuis la dernière version de l'app, puis ajoute-le à nouveau.</p>
+                  )}
                   <div className="flex gap-2 pt-2">
                     <button
                       onClick={() => onDeleteFriend(friend.id)}

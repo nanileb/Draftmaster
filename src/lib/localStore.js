@@ -30,7 +30,34 @@ export const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().
 
 // Profil local (pseudo affiché dans le partage)
 export function getProfile() { return read('dm_profile', { name: '' }); }
-export function setProfile(p) { write('dm_profile', p); }
+export function setProfile(p) { write('dm_profile', p); window.dispatchEvent(new CustomEvent('profile-updated')); }
+
+// ------------------------------------------------------------
+// Identité de synchro, sans compte : un id public (mis dans le lien de partage) et une clé secrète
+// qui ne quitte pas le téléphone, sauf par le code de récupération (changement de téléphone).
+// shared = true dès que le joueur a ouvert « Partager » : avant ça, son pool n'est jamais envoyé.
+// ------------------------------------------------------------
+const rand = (n) => {
+  const a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  const b = new Uint8Array(n); crypto.getRandomValues(b);
+  return [...b].map(x => a[x % a.length]).join('');
+};
+export function getIdentity() {
+  let o = read('dm_identity', null);
+  if (!o || !/^[A-Za-z0-9]{10,32}$/.test(o.id || '') || typeof o.key !== 'string') { o = { id: rand(16), key: rand(32), shared: false }; write('dm_identity', o); }
+  return o;
+}
+export function setIdentity(o) { write('dm_identity', o); }
+export function exportIdentity() { const o = getIdentity(); return 'DM-' + o.id + '-' + o.key; }
+export function importIdentity(code) {
+  const m = String(code || '').trim().match(/^DM-([A-Za-z0-9]{10,32})-([A-Za-z0-9]{20,64})$/);
+  if (!m) return false;
+  write('dm_identity', { id: m[1], key: m[2], shared: true });
+  write('dm_sync', {});
+  return true;
+}
+export function getSyncState() { return read('dm_sync', {}); }
+export function setSyncState(o) { write('dm_sync', { ...read('dm_sync', {}), ...o }); }
 
 // Réglages
 export function getSettings() {
@@ -40,28 +67,36 @@ export function getSettings() {
 export function setSettings(s) { write('dm_settings', { ...read('dm_settings', {}), ...s }); }
 
 export function clearAll() {
-  ['userChampionPool', 'draftmaster_pool', 'dm_players', 'dm_profile', 'dm_settings', 'riotId', 'draftmaster_champions_cache', 'draftmaster_cache_version', 'dm_coach_cache'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* rien */ } });
+  ['userChampionPool', 'draftmaster_pool', 'dm_players', 'dm_profile', 'dm_settings', 'dm_identity', 'dm_sync', 'riotId', 'draftmaster_champions_cache', 'draftmaster_cache_version', 'dm_coach_cache'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* rien */ } });
 }
 
 // ------------------------------------------------------------
 // Partage du pool sans compte : le pool est encodé dans un lien (…/Draftmaster/home?add=CODE)
-// CODE = base64url de JSON { v:1, n: pseudo, p: { TOP: [ids], ... } } (ids Data Dragon, plus courts que les noms)
+// CODE = base64url de JSON { v:2, n: pseudo, i: id de synchro, p: { TOP: [ids], ... } } (ids Data Dragon, plus courts que les noms)
+// v:1 (sans i) = ancien lien : une simple copie du pool, qui ne se met pas à jour.
 // ------------------------------------------------------------
 const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64url = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4))));
 
-export function encodeShare(name, pool) {
+export function poolIdsByRole(pool) {
   const p = {};
   (pool || []).forEach(e => Object.keys(e.roles || {}).forEach(r => { (p[r] = p[r] || []).push(e.championId); }));
-  return b64url(JSON.stringify({ v: 1, n: (name || '').slice(0, 24), p }));
+  return p;
+}
+export function encodeShare(name, pool, syncId) {
+  const o = { v: syncId ? 2 : 1, n: (name || '').slice(0, 24) };
+  if (syncId) o.i = syncId;
+  o.p = poolIdsByRole(pool);
+  return b64url(JSON.stringify(o));
 }
 export function decodeShare(code) {
   try {
     const o = JSON.parse(unb64url(String(code).trim()));
-    if (!o || o.v !== 1 || typeof o.p !== 'object') return null;
+    if (!o || (o.v !== 1 && o.v !== 2) || typeof o.p !== 'object') return null;
     const pools = { TOP: [], JUNGLE: [], MID: [], ADC: [], SUPPORT: [] };
     Object.keys(pools).forEach(r => { pools[r] = (o.p[r] || []).filter(x => typeof x === 'string').slice(0, 60); });
-    return { name: String(o.n || '').slice(0, 24), poolsIds: pools };
+    const syncId = o.v === 2 && /^[A-Za-z0-9]{10,32}$/.test(o.i || '') ? o.i : null;
+    return { name: String(o.n || '').slice(0, 24), poolsIds: pools, syncId };
   } catch (e) { return null; }
 }
 export function shareUrl(code) {

@@ -27,3 +27,14 @@ DraftMaster marche quand même :
 ## Vérification faite
 
 Test hors ligne avec un `fetch` Riot simulé (Node 22) : `/rank` renvoie les entrées filtrées ; `lite=2` renvoie 10 participants avec `riotIdGameName` et sans `frames` ; `lite=1` est inchangé. Rien n'a été testé contre la vraie API Riot (pas de clé ici, et rien n'a été déployé).
+
+## Ajout de novembre 2026 : synchro des pools entre amis
+
+Quatre routes en plus, qui ne demandent pas la clé Riot : `GET /pool?id=`, `GET /pools?ids=`, `POST /pool?id=` et `DELETE /pool?id=`. Elles stockent les pools dans un espace Workers KV lié sous le nom `POOLS`. Le fichier de ce dossier est aussi proposé dans le dépôt du coach (`lol-support-coach/worker/riot-proxy.js`).
+
+Déploiement, depuis `lol-support-coach/worker/` :
+
+1. `npx wrangler kv namespace create POOLS --binding POOLS --update-config` (ajoute l'espace dans `wrangler.jsonc`). Si ta version de wrangler refuse ces options, lance `npx wrangler kv namespace create POOLS` et ajoute à la main dans `wrangler.jsonc` : `"kv_namespaces": [{ "binding": "POOLS", "id": "<id affiché>" }]`.
+2. `npx wrangler deploy`.
+
+Vérification : `curl https://lol-support-coach.62z7h87vzm.workers.dev/pool?id=testtesttest` doit répondre `{"error":"not_found"}` (et non `sync_unavailable`, qui veut dire que l'espace KV n'est pas lié).

@@ -1,4 +1,4 @@
-// Relais Riot pour Coach Support (Cloudflare Worker).
+// Relais Riot pour Coach LoL (Cloudflare Worker).
 // Garde la clé Riot côté serveur (secret RIOT_KEY) et n'expose que 3 lectures :
 //   /live?riotId=&platform=             partie en cours
 //   /matches?riotId=&platform=&count=   dernières parties classées (ids)
@@ -8,7 +8,54 @@
 //   /match?id=&platform=&lite=1          résumé léger d'une partie (champions, postes, victoire)
 //   /match?id=&platform=&lite=2          partie sans chronologie (stats des 10 joueurs), pour l'historique de DraftMaster  [ajout DraftMaster]
 //   /rank?puuid=&platform=               rang classé d'un joueur (Solo/Duo, Flex)                                         [ajout DraftMaster]
+//   GET    /pool?id=                    pool partagé d'un joueur DraftMaster (sans clé Riot)                           [ajout DraftMaster]
+//   GET    /pools?ids=a,b,c             plusieurs pools d'un coup (30 au plus)                                          [ajout DraftMaster]
+//   POST   /pool?id=   {key, n, p}      dépose ou met à jour son pool ; la première écriture réserve l'id pour cette clé  [ajout DraftMaster]
+//   DELETE /pool?id=   {key}            efface son pool                                                                  [ajout DraftMaster]
 // Variables : RIOT_KEY (secret, obligatoire), ALLOWED_ORIGIN (ex. https://nanileb.github.io, conseillé).
+// Stockage : POOLS (espace Workers KV), seulement pour les routes /pool et /pools.
+
+const ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+const POOL_ID = /^[A-Za-z0-9]{10,32}$/;
+const POOL_TTL = 400 * 24 * 3600; // un pool non mis à jour depuis plus d'un an est oublié
+async function sha256(s) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+const publicPool = (id, o) => ({ id, n: o.n || '', p: o.p || {}, at: o.at || 0 });
+
+// [ajout DraftMaster] pools partagés entre amis : pas de compte, un id public (dans le lien de partage) et une clé secrète gardée sur le téléphone
+async function poolRoutes(req, env, url, json) {
+  if (!env.POOLS) return json({ error: 'sync_unavailable' }, 503);
+  if (url.pathname === '/pools' && req.method === 'GET') {
+    const ids = [...new Set((url.searchParams.get('ids') || '').split(',').filter(x => POOL_ID.test(x)))].slice(0, 30);
+    const out = {};
+    await Promise.all(ids.map(async id => { const o = await env.POOLS.get('pool:' + id, 'json'); if (o) out[id] = publicPool(id, o); }));
+    return json({ pools: out });
+  }
+  if (url.pathname !== '/pool') return json({ error: 'bad_request' }, 405);
+  const id = url.searchParams.get('id') || '';
+  if (!POOL_ID.test(id)) return json({ error: 'bad_request' }, 400);
+  const k = 'pool:' + id;
+  if (req.method === 'GET') {
+    const o = await env.POOLS.get(k, 'json');
+    return o ? json(publicPool(id, o)) : json({ error: 'not_found' }, 404);
+  }
+  if (req.method !== 'POST' && req.method !== 'DELETE') return json({ error: 'bad_request' }, 405);
+  const text = await req.text();
+  if (text.length > 8000) return json({ error: 'too_large' }, 413);
+  let body; try { body = JSON.parse(text); } catch (e) { return json({ error: 'bad_request' }, 400); }
+  if (!body || typeof body.key !== 'string' || body.key.length < 20 || body.key.length > 64) return json({ error: 'bad_request' }, 400);
+  const h = await sha256(body.key);
+  const cur = await env.POOLS.get(k, 'json');
+  if (cur && cur.h !== h) return json({ error: 'forbidden' }, 403);
+  if (req.method === 'DELETE') { if (cur) await env.POOLS.delete(k); return json({ ok: true }); }
+  const p = {};
+  ROLES.forEach(r => { p[r] = (Array.isArray(body.p && body.p[r]) ? body.p[r] : []).filter(x => typeof x === 'string' && /^[A-Za-z0-9]{1,30}$/.test(x)).slice(0, 60); });
+  const o = { h, n: String(body.n || '').slice(0, 24), p, at: Date.now() };
+  await env.POOLS.put(k, JSON.stringify(o), { expirationTtl: POOL_TTL });
+  return json(publicPool(id, o));
+}
 
 const REGION = { euw1: 'europe', eun1: 'europe', tr1: 'europe', me1: 'europe', ru: 'europe', na1: 'americas', br1: 'americas', la1: 'americas', la2: 'americas', oc1: 'sea', kr: 'asia', jp1: 'asia' };
 const ACCOUNT_REGION = { sea: 'americas' };
@@ -22,13 +69,14 @@ export default {
   async fetch(req, env) {
     const origin = req.headers.get('Origin') || '';
     const allow = env.ALLOWED_ORIGIN || '*';
-    const cors = { 'Access-Control-Allow-Origin': allow === '*' ? '*' : (origin === allow ? origin : allow), 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Vary': 'Origin' };
+    const cors = { 'Access-Control-Allow-Origin': allow === '*' ? '*' : (origin === allow ? origin : allow), 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Vary': 'Origin' };
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
     const json = (o, s = 200, cache = 'no-store') => new Response(JSON.stringify(o), { status: s, headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': cache } });
     if (allow !== '*' && origin && origin !== allow) return json({ error: 'origin_not_allowed' }, 403);
+    const url = new URL(req.url);
+    if (url.pathname === '/pool' || url.pathname === '/pools') return poolRoutes(req, env, url, json);
     if (!env.RIOT_KEY) return json({ error: 'missing_key' }, 500);
 
-    const url = new URL(req.url);
     const platform = (url.searchParams.get('platform') || 'euw1').toLowerCase();
     const region = REGION[platform];
     if (!region) return json({ error: 'bad_request' }, 400);

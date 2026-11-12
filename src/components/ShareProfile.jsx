@@ -1,20 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, Copy, X, Link as LinkIcon } from 'lucide-react';
+import { Share2, Copy, X, Link as LinkIcon, RefreshCw, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { encodeShare, shareUrl, getProfile, setProfile } from '@/lib/localStore';
+import { encodeShare, shareUrl, getProfile, setProfile, getIdentity, exportIdentity, importIdentity } from '@/lib/localStore';
+import { pushMyPool } from '@/lib/poolSync';
 
-// Partage du profil sans compte : un lien (et son QR code) qui contient le pool.
-// Celui qui l'ouvre ajoute le joueur et son pool à son équipe (il ne saisit qu'un pseudo).
+// Partage du profil sans compte : un lien (et son QR code) qui contient le pool et l'id de synchro.
+// Celui qui l'ouvre ajoute le joueur et son pool à son équipe (il ne saisit qu'un pseudo) ;
+// ensuite le pool se met à jour chez lui quand il change ici (relais, voir lib/poolSync.js).
 export default function ShareProfile({ userPool = [] }) {
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState(() => getProfile().name || '');
   const [qr, setQr] = useState('');
   const [copied, setCopied] = useState(false);
+  const [sync, setSync] = useState('pending'); // pending | ok | unavailable
+  const [showDevice, setShowDevice] = useState(false);
+  const [recovery, setRecovery] = useState('');
+  const [syncId, setSyncId] = useState(() => getIdentity().id);
 
   const count = userPool.reduce((s, e) => s + Object.keys(e.roles || {}).length, 0);
-  const url = shareUrl(encodeShare(name, userPool));
+  const url = shareUrl(encodeShare(name, userPool, syncId));
+
+  // Ouvrir le partage active la synchro : le pool est envoyé au relais
+  useEffect(() => {
+    if (!showModal || count === 0) return;
+    setSync('pending');
+    pushMyPool({ force: true }).then(r => setSync(r === 'ok' ? 'ok' : 'unavailable'));
+  }, [showModal, count, syncId]);
+
+  const handleRecovery = () => {
+    if (!importIdentity(recovery)) { toast.error('Code de récupération invalide'); return; }
+    setSyncId(getIdentity().id); setRecovery(''); setShowDevice(false);
+    toast.success('Ce téléphone reprend ton profil de partage');
+  };
 
   useEffect(() => {
     if (!showModal) return;
@@ -70,7 +89,24 @@ export default function ShareProfile({ userPool = [] }) {
                 </div>
                 {/* QR code sous le bouton de partage (demande d'origine) */}
                 {qr && <img src={qr} alt="QR code du lien de partage" className="mx-auto rounded-xl border border-border w-48 h-48" />}
-                <p className="text-[11px] text-muted-foreground/70 text-center">Le lien contient une copie de ton pool à cet instant : renvoie-le si ton pool change.</p>
+                <p className={cn('text-[11px] text-center flex items-center justify-center gap-1.5', sync === 'ok' ? 'text-green-win' : 'text-muted-foreground/70')}>
+                  {sync === 'pending' && <><RefreshCw className="w-3 h-3 animate-spin" />Activation de la synchro…</>}
+                  {sync === 'ok' && <>✓ Synchro active : quand tu modifies ton pool, il se met à jour chez tes amis. Pas besoin de renvoyer le lien.</>}
+                  {sync === 'unavailable' && <>Synchro indisponible pour l'instant : le lien contient quand même ton pool actuel, et la synchro démarrera d'elle-même dès que le relais répondra.</>}
+                </p>
+                <div className="border-t border-border pt-3">
+                  <button onClick={() => setShowDevice(v => !v)} className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground font-semibold">
+                    <Smartphone className="w-3.5 h-3.5" />Changer de téléphone
+                  </button>
+                  {showDevice && (
+                    <div className="space-y-2 mt-3">
+                      <p className="text-[11px] text-muted-foreground">Garde ce code de récupération pour toi. Colle-le sur ton nouveau téléphone : tes amis continueront à recevoir ton pool sans rien refaire.</p>
+                      <div className="p-2 rounded-lg bg-secondary border border-border text-[11px] font-mono break-all selectable">{exportIdentity()}</div>
+                      <input value={recovery} onChange={e => setRecovery(e.target.value)} placeholder="Coller un code DM-…" className="w-full p-2.5 rounded-lg bg-secondary border border-border text-base font-mono" />
+                      <button onClick={handleRecovery} disabled={!recovery.trim()} className="w-full py-2 rounded-lg font-semibold text-sm bg-secondary text-foreground disabled:opacity-50">Utiliser ce code sur ce téléphone</button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             <button onClick={() => setShowModal(false)} className="w-full bg-secondary text-foreground py-2 rounded-lg font-semibold text-sm">Fermer</button>
