@@ -35,6 +35,8 @@ const drafts = computeBestDrafts(byId, 10, 60, minGames);
 const out = {
   generated: new Date().toISOString(), patch: builds.patch, ddragon: version,
   minGames,
+  // État des sources au moment du calcul : tools/patch-check.mjs s'en sert pour savoir s'il faut tout recalculer
+  inputs: { ddragon: version, builds: `${builds.patch} ${builds.generated}`, counters: `${counters.patch} ${counters.generated}`, meta: `${meta.patch} ${meta.updated}` },
   source: `builds.json (${builds.games} parties ${builds.players || 'Challenger / GM / Master'}, ${(builds.regions || []).join(' + ')}), counters.json (${counters.source} ${counters.rank}, patch ${counters.patch}), meta.json (${meta.patch})`,
   drafts,
 };

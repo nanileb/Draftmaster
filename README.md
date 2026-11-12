@@ -79,7 +79,11 @@ COACH_DIR=../lol-support-coach npm run best-drafts         # ou une copie locale
 
 Le script écrit `public/data/best-drafts.json` (10 compositions, une par style puis des variantes). Sans ce fichier, l'écran calcule les drafts dans le navigateur.
 
-`.github/workflows/best-drafts.yml` fait la même chose sur GitHub Actions. Il est **prêt mais pas activé** : seul le lancement à la main est possible. Pour le lancer chaque jour, décommenter le bloc `schedule`.
+## Toujours au dernier patch (batch quotidien)
+
+`.github/workflows/patch-batch.yml` tourne chaque jour à 10 h et 20 h UTC, plus chaque lundi à 8 h heure de Paris où les meilleures drafts sont recalculées même sans nouveau patch (et à la main : Actions › Batch dernier patch › Run workflow, case « force » pour tout refaire). Il ne fait qu'une vérification rapide, `tools/patch-check.mjs` : le patch Data Dragon et l'état de `builds.json`, `counters.json`, `meta.json` du coach sont comparés à ceux enregistrés au dernier calcul (champ `inputs` de `best-drafts.json`). S'ils diffèrent, il recalcule les meilleures drafts, les nouveautés du patch (`tools/patch-notes.mjs`), enregistre les fichiers et republie le site.
+
+Ce qui suit le patch sans republication, lu en direct à chaque ouverture : champions, objets, runes, sorts et icônes (Data Dragon, dernière version), tier list, taux de victoire et synergies (`builds.json` / `meta.json` du coach, sans cache), historique et partie en cours (relais Riot). Côté coach, `builds.json` est recollecté dès qu'un nouveau patch sort (vérification quotidienne dans `lol-support-coach`). Deux sources restent manuelles : `counters.json` (relevé sur Lolalytics) et les règles de `meta.json` (lues dans les notes de patch) ; à chaque nouveau patch, le coach ouvre un ticket pour les revoir, et l'application affiche le patch de chaque source quand il diffère.
 
 ## Relais Riot
 
@@ -97,7 +101,7 @@ src/
   lib/riot.js             appels au relais Riot
   pages/, components/     écrans (même apparence que l'application Base44)
 public/                   manifest, service worker, icônes, data/
-tools/                    best-drafts.mjs, spa-404.mjs
+tools/                    best-drafts.mjs, patch-check.mjs, spa-404.mjs
 ```
 
 ## Synchro des pools entre amis (sans compte)
