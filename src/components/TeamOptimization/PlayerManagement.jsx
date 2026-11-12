@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, Edit2, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AddFriendModal from '../AddFriendModal';
@@ -29,16 +29,14 @@ export default function PlayerManagement({
   const toggleFriendExpand = (friendId) => {
     setExpandedFriends(prev => ({ ...prev, [friendId]: !prev[friendId] }));
   };
-  const [formData, setFormData] = useState({
-    name: '',
-    pools: {
-      TOP: [],
-      JUNGLE: [],
-      MID: [],
-      ADC: [],
-      SUPPORT: [],
-    },
-  });
+  const emptyPools = () => ({ TOP: [], JUNGLE: [], MID: [], ADC: [], SUPPORT: [] });
+  const [formData, setFormData] = useState({ name: '', pools: emptyPools() });
+  // id du joueur en cours de modification (null = création)
+  const [editingId, setEditingId] = useState(null);
+  const formRef = useRef(null);
+  useEffect(() => {
+    if (editingId) formRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [editingId]);
   const [selectedRole, setSelectedRole] = useState('TOP');
   const [expandedPlayers, setExpandedPlayers] = useState({});
   const [championSearch, setChampionSearch] = useState('');
@@ -65,24 +63,33 @@ export default function PlayerManagement({
     }));
   };
 
+  const resetForm = () => {
+    setFormData({ name: '', pools: emptyPools() });
+    setEditingId(null);
+    setSelectedRole('TOP');
+    setChampionSearch('');
+    setShowForm(false);
+  };
+
+  const startEdit = (player) => {
+    setFormData({ name: player.name, pools: { ...emptyPools(), ...(player.pools || {}) } });
+    setEditingId(player.id);
+    const firstRole = ROLES.find(r => player.pools?.[r]?.length > 0) || 'TOP';
+    setSelectedRole(firstRole);
+    setChampionSearch('');
+    setShowForm(true);
+  };
+
+  const hasChampions = Object.values(formData.pools).some(pool => pool.length > 0);
+  const canSubmit = formData.name.trim() && hasChampions;
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const hasChampions = Object.values(formData.pools).some(pool => pool.length > 0);
-    if (formData.name && hasChampions) {
-      onAddPlayer(formData);
-      setFormData({
-        name: '',
-        pools: {
-          TOP: [],
-          JUNGLE: [],
-          MID: [],
-          ADC: [],
-          SUPPORT: [],
-        },
-      });
-      setSelectedRole('TOP');
-      setShowForm(false);
-    }
+    if (!canSubmit) return;
+    const data = { name: formData.name.trim(), pools: formData.pools };
+    if (editingId) onUpdatePlayer(editingId, data);
+    else onAddPlayer(data);
+    resetForm();
   };
 
   const togglePlayerExpand = (playerId) => {
@@ -96,7 +103,10 @@ export default function PlayerManagement({
     <div className="space-y-4">
       {/* Form */}
       {showForm && (
-        <div className="glass rounded-2xl p-4 border border-border space-y-3">
+        <div ref={formRef} className="glass rounded-2xl p-4 border border-border space-y-3 scroll-mt-28">
+          <p className="font-grotesk font-bold text-sm text-foreground">
+            {editingId ? `Modifier ${players.find(p => p.id === editingId)?.name || 'le joueur'}` : 'Nouveau joueur'}
+          </p>
           <input
             type="text"
             placeholder="Nom du joueur"
@@ -112,6 +122,7 @@ export default function PlayerManagement({
               {ROLES.map(role => (
                 <button
                   key={role}
+                  type="button"
                   onClick={() => setSelectedRole(role)}
                   className={cn(
                     'text-xs py-1.5 rounded-lg font-semibold transition-all',
@@ -121,6 +132,9 @@ export default function PlayerManagement({
                   )}
                 >
                   {ROLE_LABELS[role]}
+                  {formData.pools[role].length > 0 && (
+                    <span className="block text-[10px] font-normal opacity-80">{formData.pools[role].length}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -138,8 +152,10 @@ export default function PlayerManagement({
                 >
                   <span className="text-foreground font-semibold">{champ}</span>
                   <button
+                    type="button"
                     onClick={() => handleRemoveChampion(champ)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    aria-label={`Retirer ${champ}`}
+                    className="text-muted-foreground hover:text-destructive transition-colors px-2 -mr-2"
                   >
                     ✕
                   </button>
@@ -177,26 +193,13 @@ export default function PlayerManagement({
           <div className="flex gap-2">
             <button
               onClick={handleSubmit}
-              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg font-semibold text-sm hover:brightness-110 transition-all"
+              disabled={!canSubmit}
+              className="flex-1 bg-primary text-primary-foreground py-2 rounded-lg font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50"
             >
-              Créer joueur
+              {editingId ? 'Enregistrer' : 'Créer joueur'}
             </button>
             <button
-              onClick={() => {
-                setShowForm(false);
-                setFormData({
-                  name: '',
-                  pools: {
-                    TOP: [],
-                    JUNGLE: [],
-                    MID: [],
-                    ADC: [],
-                    SUPPORT: [],
-                  },
-                });
-                setSelectedRole('TOP');
-                setChampionSearch('');
-              }}
+              onClick={resetForm}
               className="flex-1 bg-secondary text-foreground py-2 rounded-lg font-semibold text-sm hover:bg-secondary/80 transition-all"
             >
               Annuler
@@ -347,6 +350,13 @@ export default function PlayerManagement({
                     </div>
                   ))}
                    <div className="flex gap-2 pt-2">
+                     <button
+                       onClick={() => startEdit(player)}
+                       className="flex-1 flex items-center justify-center gap-1.5 bg-primary/10 text-primary py-2 rounded-lg text-sm font-semibold hover:bg-primary/20 transition-all"
+                     >
+                       <Edit2 className="w-3.5 h-3.5" />
+                       Modifier
+                     </button>
                      <button
                        onClick={() => onDeletePlayer(player.id)}
                        className="flex-1 flex items-center justify-center gap-1.5 bg-destructive/10 text-destructive py-2 rounded-lg text-sm font-semibold hover:bg-destructive/20 transition-all"

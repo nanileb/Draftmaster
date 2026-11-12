@@ -55,6 +55,16 @@ export default function TeamOptimization({ champions, version, onClose, embedded
 
   const handleUpdatePlayer = (playerId, playerData) => {
     persist(all.map(p => p.id === playerId ? { ...p, ...playerData } : p));
+    // Garder l'équipe en cours à jour : retirer le joueur des postes qu'il ne peut plus jouer
+    setTeamAssignment(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(role => {
+        if (next[role]?.id !== playerId) return;
+        if (playerData.pools?.[role]?.length > 0) next[role] = { ...next[role], ...playerData };
+        else delete next[role];
+      });
+      return next;
+    });
   };
 
   const handleAssignPlayer = (role, player) => {
