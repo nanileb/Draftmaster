@@ -1,0 +1,423 @@
+{
+ "source": "Export Base44 (ChampionSpells, combos rédigés dans l app d origine, non vérifiés)",
+ "combos": {
+  "Yasuo": [
+   {
+    "label": "E-Q-R Combo",
+    "sequence": [
+     "E",
+     "Q",
+     "R"
+    ],
+    "explanation": "Utilise E pour te rapprocher de l'ennemi, puis enchaîne avec Q pour infliger des dégâts avant d'utiliser R pour exécuter le coup final. Cela te permet de capitaliser sur ton burst en restant mobile."
+   },
+   {
+    "label": "Q-W Reset Combo",
+    "sequence": [
+     "Q",
+     "W",
+     "Q",
+     "R"
+    ],
+    "explanation": "Projette ton ennemi avec Q pour le marquer, puis utilise W pour te repositionner vite et lancer un deuxième Q. Cela maximise le DPS tout en évitant les contre-attaques."
+   },
+   {
+    "label": "R-E-Q-W Combo",
+    "sequence": [
+     "R",
+     "E",
+     "Q",
+     "W"
+    ],
+    "explanation": "Commence avec R pour initier le combat, utilise E pour passer à travers les ennemis et reculer, puis enchaîne avec Q pour appliquer des dégâts. Le W permet de bloquer les projectiles ennemis tout en maintenant la pression."
+   }
+  ],
+  "Yone": [
+   {
+    "label": "Engagement Burst",
+    "sequence": [
+     "R",
+     "Q",
+     "W"
+    ],
+    "explanation": "Utilisez votre R pour vous engager et faire exploser vos dégâts en enchaînant avec Q et W, ce qui permet de détruire rapidement un ennemi ciblé."
+   },
+   {
+    "label": "Combo d'Évasion",
+    "sequence": [
+     "E",
+     "Q",
+     "W",
+     "R"
+    ],
+    "explanation": "Utilisez votre E pour vous déplacer rapidement, ensuite lancez votre Q suivi de W, et terminez avec R pour infliger des dégâts tout en vous repositionnant."
+   },
+   {
+    "label": "Poke et Finish",
+    "sequence": [
+     "Q",
+     "E",
+     "R",
+     "W"
+    ],
+    "explanation": "Commencez avec Q pour poke, utilisez E pour éviter des attaques, puis R pour infliger des dégâts massifs, et terminez avec W pour sécuriser un kill."
+   }
+  ],
+  "Sylas": [
+   {
+    "label": "Vol de pouvoir",
+    "sequence": [
+     "R",
+     "W",
+     "Q"
+    ],
+    "explanation": "Utilise ta R pour récupérer une compétence clé de ton adversaire, puis enchaîne avec W pour immobiliser et Q pour infliger des dégâts instantanés."
+   },
+   {
+    "label": "Désengagement rapide",
+    "sequence": [
+     "E",
+     "Q",
+     "W"
+    ],
+    "explanation": "En utilisant E pour te rapprocher, tu peux lancer Q pour toucher un ennemi et suivre avec W pour contrôler la zone restante."
+   },
+   {
+    "label": "Combo ultime",
+    "sequence": [
+     "R",
+     "E",
+     "W",
+     "Q",
+     "R"
+    ],
+    "explanation": "Déchaîne ta R pour voler une compétence décisive, ensuite utilise E pour entrer dans la mêlée, W pour immobiliser et Q pour donner un maximum de dégâts avant de relancer ta R pour encore plus de contrôle."
+   }
+  ],
+  "Tristana": [
+   {
+    "label": "Dégagement rapide",
+    "sequence": [
+     "W",
+     "Q",
+     "R"
+    ],
+    "explanation": "Utilise ton saut (W) pour t'échapper ou pour engager, puis ton tir de barrage (Q) pour infliger des dégâts rapides. Enfin, termine avec ton ultime (R) pour finir l'ennemi en fuite."
+   },
+   {
+    "label": "Burst DPS",
+    "sequence": [
+     "Q",
+     "E",
+     "W"
+    ],
+    "explanation": "Commence avec ton tir de barrage (Q) pour augmenter ta vitesse d'attaque, utilise la grenade (E) pour infliger des dégâts et pour ralentir, puis utilise ton saut (W) pour te repositionner."
+   },
+   {
+    "label": "Engagement Full Combo",
+    "sequence": [
+     "E",
+     "W",
+     "R",
+     "Q"
+    ],
+    "explanation": "Lance ta grenade (E) sur un ennemi pour les contrôler, saute sur eux (W) pour te rapprocher, utilise ton ultime (R) pour maximiser les dégâts, puis finis avec ton tir de barrage (Q) pour infliger autant de dégâts que possible."
+   }
+  ],
+  "Lux": [
+   {
+    "label": "Snare + Burst",
+    "sequence": [
+     "E",
+     "Q",
+     "R"
+    ],
+    "explanation": "Utilise ton E pour immobiliser l'ennemi, puis enchaîne avec le Q pour le blesser et termine avec le R pour infliger d'importants dégâts."
+   },
+   {
+    "label": "Catch & Execute",
+    "sequence": [
+     "Q",
+     "E",
+     "R"
+    ],
+    "explanation": "Tente de toucher l'ennemi avec le Q, place ensuite le E pour le ralentir, puis utilise le R pour finir si son HP est bas."
+   },
+   {
+    "label": "Long Range Engage",
+    "sequence": [
+     "R",
+     "Q",
+     "W",
+     "E"
+    ],
+    "explanation": "Commence avec le R pour poser ta zone de dégâts, puis place le Q pour capturer l'ennemi, utilise le W pour te repositionner, et termine avec l'E pour le ralentir."
+   }
+  ],
+  "Jinx": [
+   {
+    "label": "Glass Cannon",
+    "sequence": [
+     "W",
+     "Q",
+     "E"
+    ],
+    "explanation": "Utilisez votre \"W\" pour obtenir du mouvement et rendre vos attaques plus rapides, puis activez le \"Q\" pour infliger des dégâts avant de fuir avec le \"E\"."
+   },
+   {
+    "label": "Sniper's Delight",
+    "sequence": [
+     "E",
+     "R",
+     "W",
+     "Q"
+    ],
+    "explanation": "Utilisez le \"E\" pour ralentir l'ennemi, lancez votre \"R\" pour infliger des dégâts à distance, puis activez le \"W\" pour augmenter votre vitesse et terminez avec le \"Q\" pour maximiser vos dégâts."
+   },
+   {
+    "label": "Full Blast",
+    "sequence": [
+     "Q",
+     "W",
+     "E",
+     "R"
+    ],
+    "explanation": "Commencez par utiliser le \"Q\" pour les attaques rapides, activez le \"W\" pour vous repositionner discrètement, utilisez le \"E\" pour contrôler l'espace, et terminez avec le \"R\" pour tirer sur les ennemis à distance."
+   }
+  ],
+  "Brand": [
+   {
+    "label": "Catch and Burst",
+    "sequence": [
+     "W",
+     "Q"
+    ],
+    "explanation": "Commencez avec W pour infliger des dégâts et mettre le feu à la cible, puis suivez avec Q pour le stun."
+   },
+   {
+    "label": "Control Zone",
+    "sequence": [
+     "E",
+     "W",
+     "Q"
+    ],
+    "explanation": "Utilisez E pour immobiliser, ensuite placez W sous l'ennemi et finissez avec Q pour un combo puissant."
+   },
+   {
+    "label": "Ultimate Burst",
+    "sequence": [
+     "R",
+     "E",
+     "W",
+     "Q"
+    ],
+    "explanation": "Lancez R pour infliger des dégâts à plusieurs cibles, puis E pour contrôler, W pour mettre le feu, et concluez avec Q pour un maximum de dégâts."
+   }
+  ],
+  "Akshan": [
+   {
+    "label": "Burst d'assassinat",
+    "sequence": [
+     "R",
+     "Q",
+     "W"
+    ],
+    "explanation": "Utilisez R pour initier à distance, puis enchaînez avec Q pour infliger des dégâts nommés et enfin W pour éviter les attaques tout en continuant à diminuer leur santé."
+   },
+   {
+    "label": "Engagement rapide",
+    "sequence": [
+     "W",
+     "Q",
+     "E"
+    ],
+    "explanation": "Activez W pour vous rapprocher de l'ennemi, enchaînez avec Q pour des dégâts rapides, puis utilisez E pour échapper ou prolonger le combat."
+   },
+   {
+    "label": "Evasion et riposte",
+    "sequence": [
+     "E",
+     "Q",
+     "R"
+    ],
+    "explanation": "Utilisez E pour vous repositionner, lancez Q pour attaquer lorsque l'ennemi est vulnérable, et terminez avec R pour infliger des dégâts critiques à distance tout en restant hors de portée."
+   }
+  ],
+  "Nami": [
+   {
+    "label": "Poke Simple",
+    "sequence": [
+     "W",
+     "Q"
+    ],
+    "explanation": "Utilisez W pour augmenter votre vitesse d'attaque et lancer immédiatement Q pour infliger des dégâts à l'ennemi."
+   },
+   {
+    "label": "Combo de Contrôle",
+    "sequence": [
+     "E",
+     "W",
+     "Q"
+    ],
+    "explanation": "Posez E pour assurer un slow, utilisez W pour booster votre ADC, puis Q pour toucher l'ennemi immobilisé."
+   },
+   {
+    "label": "Combo Ultime",
+    "sequence": [
+     "R",
+     "E",
+     "W",
+     "Q"
+    ],
+    "explanation": "Utilisez R pour lancer votre ultime et initier le combat, suivez avec E pour le contrôle, W pour le boost et Q pour les dégâts."
+   }
+  ],
+  "Singed": [
+   {
+    "label": "Slow + Poison",
+    "sequence": [
+     "E",
+     "Q"
+    ],
+    "explanation": "Utilise 'E' pour ralentir et placer un poison avec 'Q' pour infliger des dégâts sur la durée."
+   },
+   {
+    "label": "Engagement Ultime",
+    "sequence": [
+     "R",
+     "Q",
+     "W"
+    ],
+    "explanation": "Active 'R' pour tank, lance 'Q' pour infliger du poison et utilise 'W' pour essayer d'échapper ou de repositionner après l’engagement."
+   },
+   {
+    "label": "Engagement Agressif",
+    "sequence": [
+     "E",
+     "R",
+     "Q",
+     "W"
+    ],
+    "explanation": "Utilise 'E' pour initier, active 'R' pour devenir tanky, puis lance 'Q' pour le poison en toi et 'W' pour bloquer la fuite de l’ennemi."
+   }
+  ],
+  "Soraka": [
+   {
+    "label": "Engagement sécurisant",
+    "sequence": [
+     "E",
+     "Q",
+     "R"
+    ],
+    "explanation": "Utilisez votre E pour immobiliser l'ennemi, lancez votre Q pour infliger des dégâts et terminez avec votre R pour soigner vos alliés."
+   },
+   {
+    "label": "Soin et poke",
+    "sequence": [
+     "W",
+     "Q",
+     "E"
+    ],
+    "explanation": "Vous pouvez utiliser votre W pour soigner un allié, puis poke l'ennemi avec votre Q tout en gardant votre E prêt pour la défense."
+   },
+   {
+    "label": "Burst heal et protection",
+    "sequence": [
+     "Q",
+     "E",
+     "W"
+    ],
+    "explanation": "Commencez par heal un allié avec votre W, poke avec votre Q et utilisez votre E pour protéger et ralentir les ennemis qui pourraient engager."
+   }
+  ],
+  "Thresh": [
+   {
+    "label": "Catch",
+    "sequence": [
+     "Q",
+     "E"
+    ],
+    "explanation": "Utilisez votre Q pour attraper un ennemi suivi de votre E pour les tirer vers vous et les isoler."
+   },
+   {
+    "label": "Teamfight Engage",
+    "sequence": [
+     "R",
+     "Q",
+     "W"
+    ],
+    "explanation": "Activez votre R pour contrôler la zone, utilisez Q pour attraper un ennemi et W pour vous repositionner en sécurisant un allié."
+   },
+   {
+    "label": "Secure with Flay",
+    "sequence": [
+     "Q",
+     "E",
+     "R"
+    ],
+    "explanation": "D'abord, attrapez l'ennemi avec Q, puis utilisez E pour les tirer, et finissez avec R pour contrôler le champ de bataille."
+   }
+  ],
+  "AurelionSol": [
+   {
+    "label": "Combo de poke",
+    "sequence": [
+     "Q",
+     "W"
+    ],
+    "explanation": "Commencez par lancer votre Q pour poke l'ennemi, suivi de W pour augmenter votre portée et poursuivre le harcèlement."
+   },
+   {
+    "label": "Engagement avec burst",
+    "sequence": [
+     "E",
+     "R",
+     "Q"
+    ],
+    "explanation": "Utilisez E pour vous repositionner, puis enchaînez avec R pour zone l'ennemi et Q pour infliger un maximum de dégâts."
+   },
+   {
+    "label": "Combo d'ultime",
+    "sequence": [
+     "R",
+     "Q",
+     "W",
+     "E"
+    ],
+    "explanation": "Démarrez avec R pour zone votre adversaire, puis Q pour des dégâts directs et W pour les bloquer, en utilisant E pour fuir ou repositionner."
+   }
+  ],
+  "Zed": [
+   {
+    "label": "Combo d'Engagement",
+    "sequence": [
+     "W",
+     "Q",
+     "E"
+    ],
+    "explanation": "Utilisez votre W pour vous rapprocher rapidement de l'ennemi, puis enchâînez avec Q pour infliger des dégâts. E peut être utilisé pour réduire la mobilité de l'adversaire."
+   },
+   {
+    "label": "Assassinat Rapide",
+    "sequence": [
+     "R",
+     "Q",
+     "W",
+     "E"
+    ],
+    "explanation": "Activez votre R pour devenir invisible et positionnez-vous de manière à frapper avec Q. Suivez rapidement avec W pour infliger des dégâts supplémentaires avant de fuir avec E."
+   },
+   {
+    "label": "Burst Complet",
+    "sequence": [
+     "W",
+     "Q",
+     "R",
+     "Q",
+     "E"
+    ],
+    "explanation": "Commencez avec W pour initier, puis lancez Q pour les dégâts. Utilisez R pour vous repositionner et frapper à nouveau avec Q pendant que l'ennemi est surpris, et terminez avec E pour immobiliser."
+   }
+  ]
+ }
+}

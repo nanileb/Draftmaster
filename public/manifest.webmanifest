@@ -1,0 +1,18 @@
+{
+  "name": "DraftMaster — aide à la draft LoL",
+  "short_name": "DraftMaster",
+  "description": "Recommandations de champions pendant la sélection, conseils de partie et meilleures drafts du patch.",
+  "lang": "fr",
+  "start_url": "/draftmaster/home",
+  "scope": "/draftmaster/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d18",
+  "theme_color": "#0d0d18",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

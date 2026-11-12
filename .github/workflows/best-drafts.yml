@@ -1,0 +1,34 @@
+# Meilleures drafts du patch : remplace le workflow quotidien Base44 (refreshPatchDrafts).
+# PRÊT MAIS PAS ACTIVÉ : seul le lancement à la main (workflow_dispatch) est possible.
+# Pour l'activer chaque jour, décommenter le bloc « schedule » ci-dessous.
+# Le script lit builds.json, counters.json et meta.json du coach (adresse publique), calcule les 10 drafts
+# et écrit public/data/best-drafts.json. Aucune IA, aucune clé : il n'a besoin d'aucun secret.
+name: Meilleures drafts
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '30 6 * * *'   # tous les jours à 6 h 30 UTC, après la mise à jour des données du coach
+
+permissions:
+  contents: write
+
+jobs:
+  best-drafts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Calculer les meilleures drafts
+        env:
+          COACH_BASE: https://nanileb.github.io/lol-support-coach/
+        run: node tools/best-drafts.mjs
+      - name: Enregistrer le fichier s'il a changé
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add public/data/best-drafts.json
+          git diff --cached --quiet || git commit -m "Meilleures drafts du patch"
+          git push
