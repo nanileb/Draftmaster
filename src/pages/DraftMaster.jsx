@@ -10,7 +10,7 @@ import ScreenTransition from '@/components/ScreenTransition';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 // Path depth for slide direction
-const PATH_DEPTH = { '/home': 0, '/profile': 0, '/pool': 0, '/team': 0, '/champions': 0, '/home/draft': 1, '/home/matchup': 2, '/home/tips': 3, '/home/best-drafts': 1 };
+const PATH_DEPTH = { '/home': 0, '/profile': 0, '/pool': 0, '/team': 0, '/champions': 0, '/home/draft': 1, '/home/matchup': 2, '/home/tips': 3, '/home/best-drafts': 1, '/home/patch': 1 };
 
 // Root path for each tab
 const TAB_ROOTS = { home: '/home', profile: '/profile', team: '/team', champions: '/champions' };

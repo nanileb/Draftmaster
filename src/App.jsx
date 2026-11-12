@@ -1,7 +1,7 @@
 import { Toaster } from 'sonner'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate, useOutletContext, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useOutletContext, useSearchParams, useNavigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 
 // Pages
@@ -15,6 +15,7 @@ import PoolManager from './components/PoolManager';
 import ProfilePage from './pages/ProfilePage';
 import TeamOptimization from './pages/TeamOptimization';
 import ChampionsOverview from './pages/ChampionsOverview';
+import PatchNotes from './pages/PatchNotes';
 import { useDraft } from './lib/DraftContext';
 
 // Route wrappers — pull champions/version from parent Outlet context
@@ -57,6 +58,15 @@ function BestDraftsWrapper() {
   return <BestDraftsRoute champions={champions} version={version} />;
 }
 
+// Nouveautés du patch (ouvert depuis le badge « N champions · Patch X » de l'accueil)
+function PatchNotesRoute() {
+  const { champions, version } = useOutletContext();
+  const draft = useDraft();
+  const navigate = useNavigate();
+  return <PatchNotes champions={champions} version={version} userPool={draft.userPool}
+    onBack={() => (window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/home', { replace: true }))} />;
+}
+
 function ChampionsWrapper() {
   const { champions, version, dataRev } = useOutletContext();
   return <ChampionsOverview champions={champions} version={version} dataRev={dataRev} />;
@@ -76,6 +86,7 @@ const AppRoutes = () => {
         <Route path="/home/matchup" element={<MatchupRoute />} />
         <Route path="/home/tips" element={<TipsRoute />} />
         <Route path="/home/best-drafts" element={<BestDraftsWrapper />} />
+        <Route path="/home/patch" element={<PatchNotesRoute />} />
 
         {/* Champions tab */}
         <Route path="/champions" element={<ChampionsWrapper />} />

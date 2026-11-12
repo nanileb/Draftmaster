@@ -25,6 +25,7 @@ export default function RoleSelectRoute({ champions, version, addParam }) {
         championCount={champions.length}
         version={version}
         onShowBestDrafts={() => navigate('/home/best-drafts')}
+        onShowPatchNotes={() => navigate('/home/patch')}
         onShowTeamOptimization={() => navigate('/team')}
         userPool={draft.userPool}
         champions={champions}

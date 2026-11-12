@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { ROLES, ROLE_LABELS } from '@/lib/championEngine';
-import { Sword, TreePine, Flame, Target, Heart, TrendingUp, Users, RefreshCw } from 'lucide-react';
+import { Sword, TreePine, Flame, Target, Heart, TrendingUp, Users, RefreshCw, ChevronRight } from 'lucide-react';
 import ShareProfile from '@/components/ShareProfile';
 
 const ROLE_CONFIG = {
@@ -68,7 +68,7 @@ function RoleButton({ role, onSelect }) {
   );
 }
 
-export default function RoleSelect({ onSelectRole, championCount, version, onShowBestDrafts, onShowTeamOptimization, userPool, champions = [], liveSlot = null }) {
+export default function RoleSelect({ onSelectRole, championCount, version, onShowBestDrafts, onShowPatchNotes, onShowTeamOptimization, userPool, champions = [], liveSlot = null }) {
   const topRow = ROLES.slice(0, 3);
   const bottomRow = ROLES.slice(3);
 
@@ -81,10 +81,18 @@ export default function RoleSelect({ onSelectRole, championCount, version, onSho
         <div className="absolute right-0 top-0">
           <ShareProfile userPool={userPool} champions={champions} />
         </div>
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-medium px-3 py-1.5 rounded-full border border-primary/20 mb-2">
+        {/* Badge du patch : ouvre la page des nouveautés du patch courant */}
+        <button
+          type="button"
+          onClick={onShowPatchNotes}
+          disabled={!onShowPatchNotes || !(championCount > 0)}
+          aria-label={championCount > 0 ? `Voir les nouveautés du patch ${version}` : undefined}
+          className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-medium px-3 py-1.5 rounded-full border border-primary/20 mb-2 min-h-[32px] active:scale-95 transition-all enabled:hover:bg-primary/15"
+        >
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
           {championCount > 0 ? `${championCount} champions · Patch ${version}` : 'Chargement...'}
-        </div>
+          {championCount > 0 && onShowPatchNotes && <ChevronRight className="w-3.5 h-3.5 -mr-1 opacity-70" />}
+        </button>
         <h1 className="font-grotesk font-extrabold text-4xl text-foreground leading-tight">
           Draft<span className="text-primary">Master</span>
         </h1>
