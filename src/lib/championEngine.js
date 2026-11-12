@@ -444,7 +444,12 @@ export function generateGameTips(champion, enemyLaner, allyTeam, isBeginnerInPoo
   const r = role || champion.roles?.[0] || 'MID';
   const build = recommendedBuild(champion, r, enemyTeam, enemyLaner);
   const T = timersFR();
-  const early = isBeginnerInPool ? ['Farm sous ta tour si tu es en danger', 'Évite les échanges prolongés', 'Rentre à la base vers 60 % de PV si l\'adversaire a l\'avantage'] : getEarlyAdvice(champion, r, T);
+  let early = isBeginnerInPool ? ['Farm sous ta tour si tu es en danger', 'Évite les échanges prolongés', 'Rentre à la base vers 60 % de PV si l\'adversaire a l\'avantage'] : getEarlyAdvice(champion, r, T);
+  // Contre-recette R4 : dans un duel perdant, l'onglet « Début » ne garde pas les conseils agressifs de la classe
+  if (enemyLaner && r !== 'JUNGLE') {
+    const m = analyzeLaneMatchup(champion, enemyLaner, r);
+    if (m && m.advantage === 'enemy') early = early.map(defensiveEarly);
+  }
   if (isBeginnerInPool && r === 'SUPPORT') early.splice(0, 1, 'Reste près de ton ADC et de ta tour si vous êtes en danger');
   const mid = getMidAdvice(champion, allyTeam, T, r);
   const late = getLateAdvice(champion, r);
@@ -508,6 +513,13 @@ const EARLY = {
   MID_Bruiser: ['Échange court quand il gaspille un sort', 'Pousse la vague avant chaque retour', 'All-in quand ton pic de puissance arrive'],
   MID_Specialist: ['Farm et échange quand ses sorts sont en recharge', 'Pousse la vague puis roam', 'Ward les deux flancs'],
 };
+function defensiveEarly(t) {
+  if (/all-in|cherche le kill|force le fight/i.test(t)) return 'Pas d\'all-in : échange seulement quand sa jungle est montrée ailleurs';
+  if (/cherche l'engage|cherche le pick/i.test(t)) return 'Attends ta jungle pour engager : leur duo gagne les échanges tôt';
+  if (/^(poke|profite de ta portée|touche)/i.test(t)) return 'Poke seulement quand il ne peut pas répondre : il gagne les échanges longs';
+  if (/échange au niveau 1|échanges courts dès/i.test(t)) return 'Farm près de ta tour et évite les échanges avant ton premier objet';
+  return t;
+}
 function getEarlyAdvice(c, role, T) {
   if (role === 'JUNGLE') return [`Full clear terminé vers 3:00-3:20, puis crabe (${T.scuttle}) du côté où tes lanes ont la priorité`, 'Les buffs réapparaissent 5:00 après leur mort : note l\'heure', `Drake à ${T.dragon}, larves à ${T.grubs} : prépare la vision une minute avant`];
   const p = tipProfile(c, role);
