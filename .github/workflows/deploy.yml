@@ -1,4 +1,4 @@
-# Publie DraftMaster sur GitHub Pages (https://nanileb.github.io/draftmaster/) à chaque push sur main.
+# Publie DraftMaster sur GitHub Pages (https://nanileb.github.io/Draftmaster/) à chaque push sur main.
 # Prérequis (une fois) : Settings > Pages > Source = « GitHub Actions ».
 name: Publier sur GitHub Pages
 

@@ -1,4 +1,4 @@
-// GitHub Pages ne connaît pas les routes de l'application (/draftmaster/home, /draftmaster/team…) :
+// GitHub Pages ne connaît pas les routes de l'application (/Draftmaster/home, /Draftmaster/team…) :
 // on copie index.html en 404.html pour qu'un lien direct ou un rechargement ouvre quand même l'application.
 import { copyFileSync } from 'node:fs';
 copyFileSync(new URL('../dist/index.html', import.meta.url), new URL('../dist/404.html', import.meta.url));

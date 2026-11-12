@@ -8,7 +8,7 @@ C'est la reconstruction de l'application Base44 « DraftMaster », **sans Base44
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173/draftmaster/
+npm run dev          # http://localhost:5173/Draftmaster/
 ```
 
 Node 18 ou plus récent (testé avec Node 22).
@@ -17,14 +17,14 @@ Node 18 ou plus récent (testé avec Node 22).
 
 ```bash
 npm run build        # écrit dist/ (et dist/404.html, copie de index.html)
-npm run preview      # sert dist/ sur http://localhost:4173/draftmaster/
+npm run preview      # sert dist/ sur http://localhost:4173/Draftmaster/
 ```
 
-`404.html` sert à GitHub Pages : un lien direct comme `/draftmaster/team` ou un rechargement de page ouvre quand même l'application.
+`404.html` sert à GitHub Pages : un lien direct comme `/Draftmaster/team` ou un rechargement de page ouvre quand même l'application.
 
 ## Publier (non fait : à décider par Anthony)
 
-L'application est prévue pour `https://nanileb.github.io/draftmaster/` (`base: '/draftmaster/'` dans `vite.config.js`).
+L'application est prévue pour `https://nanileb.github.io/Draftmaster/` (`base: '/Draftmaster/'` dans `vite.config.js`).
 
 1. Créer un dépôt `draftmaster` sur le compte `nanileb` et y mettre le contenu de ce dossier (sans `node_modules/` ni `dist/`).
 2. `npm run build`, puis publier `dist/` sur GitHub Pages (branche `gh-pages`, ou une action « Deploy to Pages »).
@@ -62,7 +62,7 @@ Profil › Mon Pool › « Effacer mes données locales » vide tout.
 
 ### Partage du pool entre amis (sans compte)
 
-Le pool est encodé dans un lien `…/draftmaster/home?add=CODE`, avec un QR code. Quand l'ami ouvre le lien, DraftMaster propose de t'ajouter à ses joueurs sous ton pseudo. Le lien est une copie à l'instant du partage : si ton pool change, renvoie-le.
+Le pool est encodé dans un lien `…/Draftmaster/home?add=CODE`, avec un QR code. Quand l'ami ouvre le lien, DraftMaster propose de t'ajouter à ses joueurs sous ton pseudo. Le lien est une copie à l'instant du partage : si ton pool change, renvoie-le.
 
 ## Meilleures drafts du patch
 

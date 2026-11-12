@@ -14,7 +14,7 @@ if (savedTheme === 'light') {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <App />
 )
-// Application installable : service worker (portée /draftmaster/), seulement en production
+// Application installable : service worker (portée /Draftmaster/), seulement en production
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch(e => console.warn('Service worker non enregistré', e.message));

@@ -44,7 +44,7 @@ export function clearAll() {
 }
 
 // ------------------------------------------------------------
-// Partage du pool sans compte : le pool est encodé dans un lien (…/draftmaster/home?add=CODE)
+// Partage du pool sans compte : le pool est encodé dans un lien (…/Draftmaster/home?add=CODE)
 // CODE = base64url de JSON { v:1, n: pseudo, p: { TOP: [ids], ... } } (ids Data Dragon, plus courts que les noms)
 // ------------------------------------------------------------
 const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

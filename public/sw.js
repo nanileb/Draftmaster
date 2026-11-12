@@ -1,7 +1,7 @@
 // DraftMaster — service worker simple : application hors-ligne, images Data Dragon en cache.
-// Portée : /draftmaster/ uniquement (le coach a son propre service worker, on n'y touche pas).
+// Portée : /Draftmaster/ uniquement (le coach a son propre service worker, on n'y touche pas).
 const SHELL = 'dm-shell-v1', IMG = 'dm-img-v1';
-const BASE = new URL('./', self.location).pathname; // /draftmaster/
+const BASE = new URL('./', self.location).pathname; // /Draftmaster/
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'])).then(() => self.skipWaiting()));
 });

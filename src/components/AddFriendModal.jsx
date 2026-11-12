@@ -28,7 +28,7 @@ export default function AddFriendModal({ onClose, onFriendAdded, champions = [] 
         <p className="text-xs text-muted-foreground">Demande à ton ami d'ouvrir DraftMaster › bouton Partager (en haut de l'accueil). Il t'envoie un lien ou te montre un QR code : scanne-le avec l'appareil photo, ou colle le lien ici.</p>
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground font-semibold">Lien de partage de l'ami :</label>
-          <textarea value={value} onChange={e => setValue(e.target.value)} rows={3} placeholder="https://…/draftmaster/home?add=…"
+          <textarea value={value} onChange={e => setValue(e.target.value)} rows={3} placeholder="https://…/Draftmaster/home?add=…"
             className="w-full p-3 rounded-lg bg-secondary border border-border text-xs font-mono" />
           <button onClick={handleNext} disabled={!value.trim()} className="w-full py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 bg-primary text-primary-foreground disabled:opacity-50">
             <Users className="w-4 h-4" /> Continuer
