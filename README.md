@@ -57,6 +57,7 @@ Pas de compte. Tout reste sur l'appareil :
 - `dm_profile` : pseudo affiché quand tu partages ton pool ;
 - `dm_settings` : serveur, adresse du relais Riot, adresse des données du coach ;
 - `dm_identity` : id de synchro (public, mis dans le lien de partage) et clé secrète du téléphone ; `dm_sync` : état du dernier envoi ;
+- `dm_an` : résumés des parties analysées dans Profil (analyse complète et dernière game), `dm_an_role` : poste choisi pour l'analyse, `dm_profile_tab` : dernier onglet ouvert du profil ;
 - `riotId` ; copies de secours des données du coach (`dm_coach_*`) et de Data Dragon.
 
 Profil › Mon Pool › « Effacer mes données locales » vide tout.

@@ -25,7 +25,7 @@ export async function loadDDragonExtras(version) {
     Object.entries(it.data || {}).forEach(([id, x]) => {
       const p = (String(x.description).match(/<passive>[^<]*<\/passive>/g) || []).map(s => s.replace(/<[^>]+>/g, '').trim());
       const grp = p.includes('Lien vital') ? 'lifeline' : p.includes('Lame enchantée') ? 'spellblade' : p.includes('Immolation') ? 'immolate' : p.includes('Effroi') ? 'mana' : p.includes('Fendoir') ? 'hydra' : null;
-      items[id] = { name: x.name, tags: x.tags || [], gold: (x.gold || {}).total || 0, grp, into: x.into || [], from: x.from || [], depth: x.depth || 1 };
+      items[id] = { name: x.name, tags: x.tags || [], gold: (x.gold || {}).total || 0, grp, into: x.into || [], from: x.from || [], depth: x.depth || 1, gw: /Hémorragie/.test(String(x.description)) ? 1 : 0 };
     });
     const runes = {};
     (ru || []).forEach(st => { runes[st.id] = st.name; (st.slots || []).forEach(sl => (sl.runes || []).forEach(r => { runes[r.id] = r.name; })); });
