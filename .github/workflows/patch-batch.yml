@@ -12,6 +12,10 @@ on:
   schedule:
     - cron: '0 10 * * *'   # 10 h UTC : après la vérification du patch côté coach (4 h) et sa collecte
     - cron: '0 20 * * *'   # 20 h UTC : rattrape une collecte du coach plus longue ou un patch sorti dans la journée
+    # Chaque lundi à 8 h heure de Paris : meilleures drafts recalculées même sans nouveau patch.
+    # Le cron GitHub est en UTC : 6 h UTC en heure d'été, 7 h UTC en heure d'hiver ; l'étape « Lundi 8 h » garde le bon.
+    - cron: '0 6 * * 1'
+    - cron: '0 7 * * 1'
   workflow_dispatch:
     inputs:
       force:
@@ -35,17 +39,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Lundi 8 h (heure de Paris)
+        id: monday
+        if: github.event.schedule == '0 6 * * 1' || github.event.schedule == '0 7 * * 1'
+        run: |
+          # +0200 (été) : le passage de 6 h UTC est le bon ; +0100 (hiver) : celui de 7 h UTC
+          off=$(TZ=Europe/Paris date +%z)
+          if { [ "$off" = "+0200" ] && [ "${{ github.event.schedule }}" = "0 6 * * 1" ]; } || { [ "$off" = "+0100" ] && [ "${{ github.event.schedule }}" = "0 7 * * 1" ]; }; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; echo "Recalcul hebdomadaire des meilleures drafts"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "Pas 8 h à Paris : on laisse l'autre passage du lundi"
+          fi
       - name: Vérifier le numéro de patch
         id: check
+        if: steps.monday.outputs.run != 'false'
         env:
-          FORCE: ${{ github.event.inputs.force }}
+          FORCE: ${{ github.event.inputs.force || steps.monday.outputs.run }}
         run: node tools/patch-check.mjs
       - name: Recalculer les meilleures drafts
         if: steps.check.outputs.changed == 'true'
         run: node tools/best-drafts.mjs
       - name: Nouveautés du patch
         if: steps.check.outputs.changed == 'true'
-        run: if [ -f tools/patch-notes.mjs ]; then node tools/patch-notes.mjs; else echo "tools/patch-notes.mjs absent : étape sautée"; fi
+        run: |
+          if [ -f tools/patch-notes.mjs ]; then node tools/patch-notes.mjs; else echo "tools/patch-notes.mjs absent, étape sautée"; fi
       - name: Enregistrer et republier
         if: steps.check.outputs.changed == 'true'
         env:
