@@ -1,4 +1,4 @@
-// Partie en cours : route /live du relais Riot du coach (spectator v5). Port de loadLive du coach LoL.
+// Partie en cours : route /live du relais Riot (spectator v5). Port de loadLive du coach LoL.
 // Les postes sont devinés (Châtiment, profils, postes joués chez les meilleurs joueurs) puis revalidés par le joueur.
 import { meta, tags, dataRoles } from '@/lib/gameData';
 import { getSettings } from '@/lib/localStore';

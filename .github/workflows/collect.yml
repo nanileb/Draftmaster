@@ -1,0 +1,83 @@
+# Builds des meilleurs joueurs : tier list, taux de victoire par poste, builds et duos (public/data/builds.json).
+# Repris du Coach LoL : DraftMaster fait sa propre collecte, via son relais Riot (worker/, aucune clé ici).
+# - Chaque jour : vérifie le numéro de patch (tools/patch-check.mjs) et collecte seulement si builds.json est en retard.
+# - Chaque mardi : collecte complète même sans nouveau patch (les parties s'ajoutent à data/samples.json.gz).
+# - Counters (Lolalytics) et règles de meta.json sont relevés à la main : un ticket GitHub le rappelle à chaque patch.
+# Après la collecte, le batch « dernier patch » recalcule les meilleures drafts et republie le site.
+# Heure : 9 h UTC, après la collecte du coach (3 h / 4 h UTC) tant qu'elle tourne encore : même clé Riot, jamais en même temps.
+name: Builds des meilleurs joueurs
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      matches:
+        description: Nombre de parties
+        default: '2500'
+
+permissions:
+  contents: write
+  issues: write    # ticket « données à revoir à la main » quand un nouveau patch sort
+  actions: write   # pour lancer le batch « dernier patch » après la collecte
+
+concurrency: riot
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    outputs:
+      collect: ${{ steps.when.outputs.collect }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: check
+        run: node tools/patch-check.mjs
+      - id: when
+        run: |
+          if [ "${{ github.event_name }}" = workflow_dispatch ] || [ "$(date -u +%u)" = 2 ] || [ "${{ steps.check.outputs.builds_late }}" = true ]; then
+            echo "collect=true" >> "$GITHUB_OUTPUT"; echo "Collecte lancée"
+          else
+            echo "collect=false" >> "$GITHUB_OUTPUT"; echo "builds.json est au patch du moment : pas de collecte aujourd'hui"
+          fi
+      - name: Ticket pour les données relevées à la main (counters, règles de meta.json)
+        if: steps.check.outputs.counters_late == 'true' || steps.check.outputs.meta_late == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          P: ${{ steps.check.outputs.patch }}
+          C: ${{ steps.check.outputs.counters_late }}
+          M: ${{ steps.check.outputs.meta_late }}
+        run: |
+          T="Patch $P : données à revoir à la main"
+          if gh issue list --state all --search "\"$T\" in:title" --json title -q '.[].title' | grep -qxF "$T"; then echo "Ticket déjà ouvert"; exit 0; fi
+          B="Le patch $P est sorti. public/data/builds.json (tier list, builds, synergies) est recollecté automatiquement ; ces fichiers sont relevés à la main :"
+          [ "$C" = true ] && B="$B"$'\n'"- [ ] public/data/counters.json : duels Lolalytics à relever au patch $P (data/counters-raw puis node tools/counters-build.mjs)"
+          [ "$M" = true ] && B="$B"$'\n'"- [ ] public/data/meta.json : règles, tiers support et notes à vérifier avec les notes de patch officielles"
+          gh issue create --title "$T" --body "$B"
+
+  collect:
+    needs: patch
+    if: needs.patch.outputs.collect == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/collect.mjs ${{ github.event.inputs.matches || '2500' }}
+      - name: Enregistrer et lancer le batch « dernier patch »
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add public/data/builds.json data/samples.json.gz
+          if git diff --cached --quiet; then echo "Aucun fichier modifié"; exit 0; fi
+          git commit -m "Builds mis à jour (meilleurs joueurs EUW + KR)"
+          git pull --rebase origin main && git push
+          # Un commit du bot ne relance pas les workflows : le batch recalcule les drafts puis republie le site
+          gh workflow run patch-batch.yml --ref main

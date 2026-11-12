@@ -79,7 +79,7 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
   const [selectedChampion, setSelectedChampion] = useState(null); // { champion, role }
   const loadingStats = false;
 
-  // Statistiques réelles : builds.json du coach (Challenger / GM / Master). Pas de données = « Autres ».
+  // Statistiques réelles : data/builds.json (Challenger / GM / Master). Pas de données = « Autres ».
   const statsMap = useMemo(() => {
     const map = {};
     champions.forEach(c => ROLES.forEach(r => { const s = championStat(c.id, r); if (s) map[`${c.id}_${r}`] = s; }));
@@ -87,7 +87,7 @@ export default function ChampionsOverview({ champions, version, dataRev }) {
   }, [champions, dataRev]);
   const sourceNote = DATA.builds
     ? `Tiers et taux de victoire : parties Challenger / GM / Master (patch ${DATA.builds.patch || '?'}, ${DATA.builds.games || '?'} parties), lissés vers 50 % quand l'échantillon est petit. Supports : tier calculé sur les parties dès 200 parties, sinon tier de la méta du coach.`
-    : 'Données du coach indisponibles : aucun tier affiché.';
+    : 'Statistiques indisponibles : aucun tier affiché.';
 
   // Build champion list for current role — ALL champions, stats optional
   const championsForRole = useMemo(() => {

@@ -1,6 +1,6 @@
 // Données de l'utilisateur, gardées dans ce navigateur (localStorage).
 // Remplace les entités Base44 Player / Friend / User (pas de compte, pas de serveur).
-import { COACH_BASE_DEFAULT, RELAY_DEFAULT } from '@/lib/gameData';
+import { RELAY_DEFAULT } from '@/lib/gameData';
 
 const read = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } };
@@ -62,9 +62,10 @@ export function setSyncState(o) { write('dm_sync', { ...read('dm_sync', {}), ...
 // Réglages
 export function getSettings() {
   const s = read('dm_settings', {});
-  return { relay: s.relay || RELAY_DEFAULT, coachBase: s.coachBase || COACH_BASE_DEFAULT, platform: s.platform || 'euw1' };
+  return { relay: s.relay || RELAY_DEFAULT, platform: s.platform || 'euw1' };
 }
-export function setSettings(s) { write('dm_settings', { ...read('dm_settings', {}), ...s }); }
+// coachBase (ancienne adresse des données du coach) n'est plus utilisé : on l'efface au passage
+export function setSettings(s) { const { coachBase, ...rest } = { ...read('dm_settings', {}), ...s }; write('dm_settings', rest); }
 
 export function clearAll() {
   ['userChampionPool', 'draftmaster_pool', 'dm_players', 'dm_profile', 'dm_settings', 'dm_identity', 'dm_sync', 'riotId', 'draftmaster_champions_cache', 'draftmaster_cache_version', 'dm_coach_cache'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* rien */ } });

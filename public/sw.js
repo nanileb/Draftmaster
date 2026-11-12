@@ -1,5 +1,5 @@
 // DraftMaster — service worker simple : application hors-ligne, images Data Dragon en cache.
-// Portée : /Draftmaster/ uniquement (le coach a son propre service worker, on n'y touche pas).
+// Portée : /Draftmaster/ uniquement.
 const SHELL = 'dm-shell-v1', IMG = 'dm-img-v1';
 const BASE = new URL('./', self.location).pathname; // /Draftmaster/
 self.addEventListener('install', e => {
@@ -16,7 +16,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.open(IMG).then(async c => (await c.match(e.request)) || fetch(e.request).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; })));
     return;
   }
-  // Seulement nos propres fichiers (pas les données du coach ni le relais Riot)
+  // Seulement nos propres fichiers (pas le relais Riot)
   if (u.origin !== location.origin || !u.pathname.startsWith(BASE)) return;
   // Navigation : réseau d'abord, sinon index.html en cache (routes de l'application)
   if (e.request.mode === 'navigate') {
