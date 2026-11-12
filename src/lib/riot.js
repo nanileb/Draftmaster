@@ -13,7 +13,7 @@ const ERRORS = {
   bad_request: 'Demande invalide.',
 };
 
-async function relay(path, params) {
+export async function relay(path, params) {
   const s = getSettings();
   const u = new URL(s.relay.replace(/\/$/, '') + path);
   Object.entries({ platform: s.platform, ...params }).forEach(([k, v]) => { if (v != null) u.searchParams.set(k, v); });
@@ -86,4 +86,13 @@ export async function fetchMatchHistory(riotId, count = 10, onProgress) {
 // Rang classé : route /rank (patch du worker). Sans elle, on renvoie [] sans erreur.
 export async function fetchRank(puuid) {
   try { const r = await relay('/rank', { puuid }); return r.entries || []; } catch (e) { return []; }
+}
+
+// Partie complète avec la chronologie (route /match sans « lite », 2 appels Riot) : sert à l'analyse du profil
+export async function fetchFullMatch(id) {
+  return relay('/match', { id });
+}
+// Liste des dernières parties classées (ids) et puuid du joueur
+export async function fetchMatchIds(riotId, count = 50) {
+  return relay('/matches', { riotId, count });
 }

@@ -9,10 +9,12 @@ import { useOutletContext } from 'react-router-dom';
 import {
   User, Edit2, Check, X, RefreshCw, Loader2,
   Sword, Shield, BookUser, ChevronDown, ChevronUp,
-  BarChart2, Clock, Medal, Settings
+  BarChart2, Clock, Medal, Settings, Crosshair
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AnalysisTab from '@/components/profile/AnalysisTab';
+import FullAnalysisTab from '@/components/profile/FullAnalysisTab';
+import LastGameTab from '@/components/profile/LastGameTab';
+import { RIOT_TO_ROLE } from '@/lib/coachAnalysis';
 
 const TIER_COLORS = {
   IRON: 'text-stone-400', BRONZE: 'text-amber-700', SILVER: 'text-slate-300',
@@ -265,7 +267,14 @@ export default function ProfilePage() {
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('history');
+  const [activeTab, setActiveTabState] = useState(() => { try { const t = localStorage.getItem('dm_profile_tab'); return ['history', 'analysis', 'last'].includes(t) ? t : 'history'; } catch (e) { return 'history'; } });
+  const setActiveTab = t => { setActiveTabState(t); try { localStorage.setItem('dm_profile_tab', t); } catch (e) { /* rien */ } };
+  const [refreshKey, setRefreshKey] = useState(0);
+  // Poste le plus joué dans l'historique : poste proposé par défaut pour l'analyse complète
+  const mainRole = React.useMemo(() => {
+    const n = {}; matches.forEach(m => { const r = RIOT_TO_ROLE[m.role]; if (r) n[r] = (n[r] || 0) + 1; });
+    return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || null;
+  }, [matches]);
 
   const fetchHistory = useCallback(async (id) => {
     const parts = id.split('#');
@@ -343,7 +352,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => fetchHistory(riotId)}
+                      onClick={() => { fetchHistory(riotId); setRefreshKey(k => k + 1); }}
                       disabled={loading}
                       className="p-1.5 rounded-lg bg-secondary text-muted-foreground"
                     >
@@ -373,36 +382,24 @@ export default function ProfilePage() {
 
 
 
-      {/* Tabs */}
+      {/* Onglets */}
       {riotId && (
-        <div className="flex border-b border-border px-4">
-          <button
-            onClick={() => setActiveTab('history')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors',
-              activeTab === 'history'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground'
-            )}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            Historique
-          </button>
-          <button
-            onClick={() => setActiveTab('analysis')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors',
-              activeTab === 'analysis'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground'
-            )}
-          >
-            <BarChart2 className="w-3.5 h-3.5" />
-            Analyse
-          </button>
+        <div className="grid grid-cols-3 border-b border-border px-2">
+          {[['history', Clock, 'Historique'], ['analysis', BarChart2, 'Analyse complète'], ['last', Crosshair, 'Dernière game']].map(([k, Icon, label]) => (
+            <button
+              key={k}
+              onClick={() => setActiveTab(k)}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 px-1 py-2 min-h-[52px] text-[12px] leading-tight font-medium border-b-2 transition-colors',
+                activeTab === k ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              <span className="text-center">{label}</span>
+            </button>
+          ))}
         </div>
       )}
-
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
@@ -424,14 +421,14 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {loading && (
+        {loading && activeTab === 'history' && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
             <p className="text-sm text-muted-foreground">Chargement de l'historique…{progress ? ` (${progress})` : ''}</p>
           </div>
         )}
 
-        {error && (
+        {error && activeTab === 'history' && (
           <div className="glass rounded-xl p-4 border border-destructive/30 bg-destructive/5 text-center">
             <p className="text-sm text-destructive">{error}</p>
             <p className="text-xs text-muted-foreground mt-1">Vérifie ton Riot ID et réessaie</p>
@@ -458,8 +455,12 @@ export default function ProfilePage() {
           </>
         )}
 
-        {!loading && activeTab === 'analysis' && (
-          <AnalysisTab matches={matches} ddVersion={ddVersion} champions={champions} rankedStats={rankedStats} />
+        {riotId && activeTab === 'analysis' && (
+          <FullAnalysisTab key={riotId} riotId={riotId} defaultRole={mainRole} />
+        )}
+
+        {riotId && activeTab === 'last' && (
+          <LastGameTab key={riotId} riotId={riotId} refreshKey={refreshKey} />
         )}
 
         <SettingsPanel />
