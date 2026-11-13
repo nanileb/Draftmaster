@@ -34,7 +34,9 @@ export function newLiveDraft(draft, teamAssignment, championsById) {
     pools[r] = poolIds(p && p.pools && p.pools[r], championsById);
     if (plan[r] && !pools[r].includes(plan[r])) pools[r].unshift(plan[r]);
   });
-  return { v: 1, name: draft.name || draft.playstyle || 'Draft', plan, players, pools, locked: EMPTY(), enemy: EMPTY(), bans: [], startedAt: Date.now() };
+  // Mon poste : celui où « Toi » a été assigné (mis en avant pendant la draft)
+  const myRole = ROLES.find(r => teamAssignment[r] && teamAssignment[r].isMePlayer) || null;
+  return { v: 1, name: draft.name || draft.playstyle || 'Draft', plan, players, pools, myRole, locked: EMPTY(), enemy: EMPTY(), bans: [], startedAt: Date.now() };
 }
 
 // Poste le plus probable d'un pick adverse (parties des meilleurs joueurs, puis tags), sinon le premier libre
@@ -51,6 +53,8 @@ export function applyPcSelection(st, sel, championsById) {
   if (!sel) return st;
   const next = { ...st, plan: { ...st.plan }, locked: { ...st.locked }, enemy: { ...st.enemy }, bans: [...st.bans], pcN: sel.n };
   let changed = st.pcN !== sel.n;
+  // Poste donné par le client League : c'est le mien
+  if (sel.myRole && st.myRole !== sel.myRole) { next.myRole = sel.myRole; changed = true; }
   // Nouvelle sélection sur le PC alors que cette draft en avait déjà suivi une : on repart d'une sélection vide (la compo prévue reste)
   if (st.pcN != null && st.pcN !== sel.n) { next.locked = EMPTY(); next.enemy = EMPTY(); next.bans = []; }
   sel.bans.forEach(id => { if (championsById[id] && !next.bans.includes(id)) { next.bans.push(id); changed = true; } });
