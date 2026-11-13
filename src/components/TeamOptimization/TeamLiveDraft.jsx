@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, Lock, Unlock, Ban, RefreshCw, Plus, Swords, AlertTriangle, ArrowRight, RotateCcw } from 'lucide-react';
+import { X, Lock, Unlock, Ban, RefreshCw, Plus, Swords, AlertTriangle, ArrowRight, RotateCcw, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ChampionPicker from '@/components/ChampionPicker';
 import { ROLES, ROLE_FR, analyzeLiveDraft } from '@/lib/teamDraft';
@@ -20,6 +20,7 @@ export default function TeamLiveDraft({ live, setLive, champions, onClose, onGam
   // picker : { kind: 'ally' | 'enemy' | 'ban', role }
   const [picker, setPicker] = useState(null);
   const [enemyMenu, setEnemyMenu] = useState(null);
+  const [detail, setDetail] = useState(false);
 
   const update = (fn) => setLive(prev => { const next = { ...prev, plan: { ...prev.plan }, locked: { ...prev.locked }, enemy: { ...prev.enemy }, bans: [...prev.bans], pools: { ...prev.pools } }; fn(next); return next; });
   const taken = [...live.bans, ...ROLES.map(r => live.enemy[r]), ...ROLES.map(r => live.locked[r])].filter(Boolean);
@@ -49,7 +50,8 @@ export default function TeamLiveDraft({ live, setLive, champions, onClose, onGam
 
   const lockedCount = ROLES.filter(r => live.locked[r]).length;
   const enemyCount = ROLES.filter(r => live.enemy[r]).length;
-  const T = A.totals;
+  const T = A.totals, PJ = A.projected, B = A.breakdown;
+  const anyPick = T.us.n + T.them.n > 0;
   const pickerPool = picker && picker.kind === 'ally' ? (live.pools[picker.role] || []).map(id => ({ championId: id })) : [];
 
   return (
@@ -65,7 +67,7 @@ export default function TeamLiveDraft({ live, setLive, champions, onClose, onGam
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5" style={{ paddingBottom: 'calc(9.5rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5" style={{ paddingBottom: 'calc(12rem + env(safe-area-inset-bottom, 0px))' }}>
         {/* Bans */}
         <section>
           <div className="flex items-center justify-between mb-2">
@@ -191,21 +193,56 @@ export default function TeamLiveDraft({ live, setLive, champions, onClose, onGam
 
       {/* Barre du bas : qui mène */}
       <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card/95 backdrop-blur-lg px-4 pt-2.5" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
-        <div className="grid grid-cols-2 gap-2 mb-2.5">
+        {detail && (
+          <div className="max-h-[45vh] overflow-y-auto mb-2.5 space-y-3 pr-1">
+            {!anyPick ? <p className="text-xs text-muted-foreground">Le détail se remplit dès le premier champion verrouillé chez nous ou choisi en face.</p> : (
+              <>
+                {B.duels.length > 0 && (
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Duels de lane mesurés</p>
+                    <ul className="space-y-1">{B.duels.map((d, i) => <li key={i} className={cn('text-xs', TONE[d.tone])}>{d.text}</li>)}</ul>
+                  </div>
+                )}
+                {[['Nous', B.us, B.soloUs], ['Eux', B.them, B.soloThem]].map(([label, items, solo]) => (solo.length > 0 &&
+                  <div key={label}>
+                    <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">{label} · {solo.length}/5 sélectionnés</p>
+                    <div className="flex flex-wrap gap-1.5 mb-1.5">
+                      {solo.map(x => (
+                        <span key={x.id} className="flex items-center gap-1 text-[11px] bg-secondary rounded-lg pr-2">
+                          <Icon c={byId[x.id]} size="w-6 h-6" /> {x.est ? `${x.score} %` : 'peu de parties'}
+                        </span>
+                      ))}
+                    </div>
+                    <ul className="space-y-0.5">{items.map((it, i) => <li key={i} className={cn('text-xs', TONE[it.tone])}>{it.tone === 'good' ? '+ ' : it.tone === 'bad' ? '− ' : ''}{it.text}</li>)}</ul>
+                  </div>
+                ))}
+                <p className="text-[11px] text-muted-foreground">Le % à côté de chaque champion est sa victoire estimée seul à son poste (parties Challenger / GM / Master). La victoire d'équipe ajoute les duels de lane et le duo bot, bornée entre 42 et 58 %.</p>
+              </>
+            )}
+          </div>
+        )}
+        <button onClick={() => setDetail(d => !d)} className="w-full flex items-center justify-between mb-1.5" aria-expanded={detail}>
+          <span className="text-[11px] text-muted-foreground font-semibold">Équipes avec les champions sélectionnés</span>
+          <span className="text-[11px] text-primary font-semibold flex items-center gap-0.5">Détail {detail ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}</span>
+        </button>
+        <div className="grid grid-cols-2 gap-2 mb-1.5" onClick={() => setDetail(d => !d)}>
           {[['us', 'Nous', T.us], ['them', 'Eux', T.them]].map(([k, label, t]) => (
             <div key={k} className={cn('rounded-xl border px-3 py-1.5', k === 'us' ? 'border-primary/40' : 'border-red-lose/40')}>
-              <p className="text-[11px] text-muted-foreground font-semibold">{label}</p>
+              <p className="text-[11px] text-muted-foreground font-semibold">{label} · {t.n}/5</p>
               <div className="flex items-baseline justify-between gap-2">
                 <span className={cn('font-grotesk font-bold text-base', T.bestDraft === k ? 'text-green-win' : 'text-foreground')}>
                   {t.score != null ? t.score : '—'}<span className="text-[10px] text-muted-foreground font-normal"> draft</span>
                 </span>
                 <span className={cn('font-grotesk font-bold text-base', T.bestWin === k ? 'text-green-win' : T.bestWin === 'even' ? 'text-gold' : 'text-red-lose')}>
-                  {t.n ? `${t.win} %` : '—'}<span className="text-[10px] text-muted-foreground font-normal"> victoire</span>
+                  {anyPick ? `${t.win} %` : '—'}<span className="text-[10px] text-muted-foreground font-normal"> victoire</span>
                 </span>
               </div>
             </div>
           ))}
         </div>
+        {T.us.n < 5 && PJ.us.score != null && (
+          <p className="text-[11px] text-muted-foreground mb-2">Si on termine la compo prévue : <span className="font-semibold text-foreground">{PJ.us.score}</span> draft · <span className="font-semibold text-foreground">{PJ.us.win} %</span> victoire</p>
+        )}
         <button onClick={onGame} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
           <Swords className="w-4 h-4" />
           {lockedCount === 5 ? 'Draft validée : passer en jeu' : `Passer en jeu (${lockedCount}/5 verrouillés)`}
