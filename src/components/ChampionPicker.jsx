@@ -22,10 +22,12 @@ export default function ChampionPicker({
   userPool = [],
   title = 'Choisir un champion',
   topPickNames = [],
+  initialPoolOnly = false,
+  poolLabel = 'Mon Pool',
 }) {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState(role || 'All');
-  const [showPoolOnly, setShowPoolOnly] = useState(false);
+  const [showPoolOnly, setShowPoolOnly] = useState(initialPoolOnly);
 
   const filtered = useMemo(() => {
     let result = champions.filter(c => {
@@ -72,7 +74,7 @@ export default function ChampionPicker({
                 : 'border-border text-muted-foreground'
             )}
           >
-            Mon Pool
+            {poolLabel}
           </button>
         )}
       </div>

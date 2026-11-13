@@ -57,6 +57,7 @@ Pas de compte. Tout reste sur l'appareil :
 - `dm_settings` : serveur, adresse du relais Riot ;
 - `dm_identity` : id de synchro (public, mis dans le lien de partage) et clé secrète du téléphone ; `dm_sync` : état du dernier envoi ;
 - `dm_an` : résumés des parties analysées dans Profil (analyse complète et dernière game), `dm_an_role` : poste choisi pour l'analyse, `dm_profile_tab` : dernier onglet ouvert du profil ;
+- `dm_team_live` : draft d'équipe suivie en direct (compo choisie, bans, picks des deux côtés), gardée 6 h ;
 - `dm_game` : partie en cours (postes, champions, côté, chrono, drakes) pour la retrouver après un rechargement ; `dm_alerts` : son / vibration des alertes ;
 - `riotId` ; copies de secours des statistiques (`dm_coach_*`, nom gardé pour ne pas perdre les copies existantes) et de Data Dragon.
 
@@ -65,6 +66,10 @@ Profil › Mon Pool › « Effacer mes données locales » vide tout.
 ### Partage du pool entre amis (sans compte)
 
 Le pool est encodé dans un lien `…/Draftmaster/home?add=CODE`, avec un QR code. Quand l'ami ouvre le lien, DraftMaster propose de t'ajouter à ses joueurs sous ton pseudo. Le lien est une copie à l'instant du partage : si ton pool change, renvoie-le.
+
+## Draft d'équipe en direct (onglet Équipe)
+
+Une fois les 5 joueurs assignés, chaque compo proposée a un bouton « Jouer cette draft : suivi en direct ». Pendant la sélection : bans, champions verrouillés chez nous, picks adverses par poste. Dès qu'un champion prévu est banni, pris en face ou contré, l'écran le signale et propose le meilleur remplaçant du pool du joueur (même classement que les recommandations de l'Accueil). La barre du bas compare en permanence le score de draft et la victoire estimée des deux équipes. « Passer en jeu » ouvre le plan d'équipe : lanes gagnantes et à quel moment, risques de jungle, timing de la compo, rôle de chacun en teamfight, 5 contre 5 ou split push, condition de victoire. Logique : `src/lib/teamDraft.js` (réutilise `scoreChampion`, `calculateDraftScore`, `calculateWinProbability`, `analyzeLaneMatchup`, `laneAnalysis`).
 
 ## Meilleures drafts du patch
 

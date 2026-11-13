@@ -228,7 +228,7 @@ export function getRecommendations(role, allChampions, allyByRole, enemyByRole, 
   const alternatives = list.slice(1).filter(c => !avoid.has(c.id)).slice(0, 4);
   return { best, alternatives, risky };
 }
-function shortReason(txt, v) {
+export function shortReason(txt, v) {
   const m = txt.match(/^(\d+(?:[.,]\d+)?) % contre (.+?) \(duel\)(?: au lieu de (\d+(?:[.,]\d+)?) %)?/);
   // Le % seul peut tromper (52 % « difficile » pour un champion à 55 % de moyenne) : on donne aussi sa moyenne
   const vs = m && m[3] && m[3] !== m[1] ? `${m[1]} % au lieu de ${m[3]} %` : m && `${m[1]} %`;

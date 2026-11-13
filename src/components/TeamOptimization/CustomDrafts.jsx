@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Loader2, AlertCircle } from 'lucide-react';
+import { Zap, Loader2, AlertCircle, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { computeCustomDrafts } from '@/lib/bestDraftsEngine';
 
@@ -11,7 +11,7 @@ const ROLE_CONFIG = {
   SUPPORT: { label: 'Support', icon: '💫' },
 };
 
-export default function CustomDrafts({ teamAssignment, champions, version }) {
+export default function CustomDrafts({ teamAssignment, champions, version, onFollow }) {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -129,6 +129,12 @@ export default function CustomDrafts({ teamAssignment, champions, version }) {
 
           {expandedDraft === idx && (
             <div className="px-4 py-4 border-t border-border bg-secondary/20 space-y-3">
+              {onFollow && (
+                <button onClick={() => onFollow(draft)} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+                  <Radio className="w-4 h-4" />
+                  Jouer cette draft : suivi en direct
+                </button>
+              )}
               {/* Description */}
               {draft.description && (
                 <div>
