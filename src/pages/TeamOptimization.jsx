@@ -7,7 +7,8 @@ import { getPlayers, setPlayers as savePlayers, getPool, poolByRole, getProfile,
 import { refreshFriends } from '@/lib/poolSync';
 import TeamLiveDraft from '@/components/TeamOptimization/TeamLiveDraft';
 import TeamGamePlan from '@/components/TeamOptimization/TeamGamePlan';
-import { newLiveDraft, analyzeLiveDraft } from '@/lib/teamDraft';
+import { newLiveDraft, analyzeLiveDraft, applyPcSelection } from '@/lib/teamDraft';
+import { usePcLink, readSelection } from '@/lib/pcLink';
 
 // Draft d'équipe suivie en direct, gardée dans ce navigateur (un rechargement en pleine sélection ne perd rien)
 const LIVE_KEY = 'dm_team_live';
@@ -25,6 +26,13 @@ export default function TeamOptimization({ champions, version, onClose, embedded
   useEffect(() => { writeLive(live); }, [live]);
   const byId = useMemo(() => Object.fromEntries((champions || []).map(c => [c.id, c])), [champions]);
   const liveOurs = useMemo(() => (live && live.view === 'game' ? analyzeLiveDraft(live, byId).ours : null), [live, byId]);
+  // PC relié : bans, picks adverses et nos verrouillages se cochent tout seuls pendant la draft d'équipe en direct
+  const pc = usePcLink();
+  useEffect(() => {
+    if (pc.status !== 'select' || !champions.length) return;
+    const sel = readSelection(pc.data, champions);
+    setLive(prev => (prev ? applyPcSelection(prev, sel, byId) : prev));
+  }, [pc, byId]);
   const startLive = (draft) => setLive({ ...newLiveDraft(draft, teamAssignment, byId), view: 'draft' });
   const setView = (view) => setLive(prev => (prev ? { ...prev, view } : prev));
   const currentUser = { id: 'local', full_name: getProfile().name || 'Moi' };

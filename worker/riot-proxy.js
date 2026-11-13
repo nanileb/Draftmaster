@@ -12,8 +12,12 @@
 //   GET    /pools?ids=a,b,c             plusieurs pools d'un coup (30 au plus)                                          [ajout DraftMaster]
 //   POST   /pool?id=   {key, n, p}      dépose ou met à jour son pool ; la première écriture réserve l'id pour cette clé  [ajout DraftMaster]
 //   DELETE /pool?id=   {key}            efface son pool                                                                  [ajout DraftMaster]
+//   POST   /pc?id=     {key, phase, session}  le compagnon PC envoie la sélection des champions lue dans le client League    [ajout DraftMaster]
+//   GET    /pc?id=                     le téléphone relit la dernière sélection reçue de son PC                          [ajout DraftMaster]
 // Variables : RIOT_KEY (secret, obligatoire), ALLOWED_ORIGIN (ex. https://nanileb.github.io, conseillé).
-// Stockage : POOLS (espace Workers KV), seulement pour les routes /pool et /pools.
+// Stockage : POOLS (espace Workers KV), seulement pour les routes /pool et /pools ;
+//            PCLINK (Durable Object PcLink, un par code PC), seulement pour la route /pc.
+import { compactSession, cleanPhase } from './champselect.js';
 
 const ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
 const POOL_ID = /^[A-Za-z0-9]{10,32}$/;
@@ -57,6 +61,57 @@ async function poolRoutes(req, env, url, json) {
   return json(publicPool(id, o));
 }
 
+// [ajout DraftMaster] PC relié : un code (8 caractères, affiché par le compagnon PC) = un Durable Object qui garde
+// la dernière sélection des champions. Pas de KV ici : un KV peut rester plusieurs dizaines de secondes en retard,
+// un Durable Object répond tout de suite avec la dernière version. La première écriture réserve le code pour la clé du PC.
+const PC_ID = /^[A-Z0-9]{8}$/;
+const PC_TTL = 30 * 24 * 3600 * 1000; // un code qui n'a rien reçu depuis 30 jours est oublié
+export class PcLink {
+  constructor(state) { this.storage = state.storage; }
+  async fetch(req) {
+    const s = this.storage;
+    const prev = await s.get('o');
+    if (req.method === 'GET') {
+      if (!prev) return Response.json({ error: 'not_found' }, { status: 404 });
+      return Response.json({ ...prev, now: Date.now() });
+    }
+    const b = await req.json();
+    const h = await s.get('h');
+    if (h && h !== b.h) return Response.json({ error: 'forbidden' }, { status: 403 });
+    if (!h) await s.put('h', b.h);
+    const now = Date.now();
+    const cs = b.cs || null;
+    // n : numéro de la sélection, augmente à chaque nouvelle sélection (l'application repart de zéro)
+    const n = (prev && prev.n || 0) + (cs && !(prev && prev.cs) ? 1 : 0);
+    const same = prev && prev.phase === b.phase && JSON.stringify(prev.cs) === JSON.stringify(cs);
+    const o = { phase: b.phase, cs, n, at: same ? prev.at : now, seen: now };
+    await s.put('o', o);
+    if (!prev || now - (prev.seen || 0) > 3600 * 1000) await s.setAlarm(now + PC_TTL);
+    return Response.json({ ok: true, n, changed: !same });
+  }
+  async alarm() { await this.storage.deleteAll(); }
+}
+
+async function pcRoutes(req, env, url, json) {
+  if (!env.PCLINK) return json({ error: 'sync_unavailable' }, 503);
+  const id = (url.searchParams.get('id') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!PC_ID.test(id)) return json({ error: 'bad_request' }, 400);
+  const stub = env.PCLINK.get(env.PCLINK.idFromName(id));
+  if (req.method === 'GET') {
+    const r = await stub.fetch('https://pc/', { method: 'GET' });
+    return json(await r.json(), r.status);
+  }
+  if (req.method !== 'POST') return json({ error: 'bad_request' }, 405);
+  const text = await req.text();
+  if (text.length > 400000) return json({ error: 'too_large' }, 413);
+  let body; try { body = JSON.parse(text); } catch (e) { return json({ error: 'bad_request' }, 400); }
+  if (!body || typeof body.key !== 'string' || body.key.length < 20 || body.key.length > 64) return json({ error: 'bad_request' }, 400);
+  const phase = cleanPhase(body.phase);
+  const cs = phase === 'ChampSelect' ? compactSession(body.session) : null;
+  const r = await stub.fetch('https://pc/', { method: 'POST', body: JSON.stringify({ h: await sha256(body.key), phase, cs }) });
+  return json(await r.json(), r.status);
+}
+
 const REGION = { euw1: 'europe', eun1: 'europe', tr1: 'europe', me1: 'europe', ru: 'europe', na1: 'americas', br1: 'americas', la1: 'americas', la2: 'americas', oc1: 'sea', kr: 'asia', jp1: 'asia' };
 const ACCOUNT_REGION = { sea: 'americas' };
 
@@ -75,6 +130,7 @@ export default {
     if (allow !== '*' && origin && origin !== allow) return json({ error: 'origin_not_allowed' }, 403);
     const url = new URL(req.url);
     if (url.pathname === '/pool' || url.pathname === '/pools') return poolRoutes(req, env, url, json);
+    if (url.pathname === '/pc') return pcRoutes(req, env, url, json);
     if (!env.RIOT_KEY) return json({ error: 'missing_key' }, 500);
 
     const platform = (url.searchParams.get('platform') || 'euw1').toLowerCase();

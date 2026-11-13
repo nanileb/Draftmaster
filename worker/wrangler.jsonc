@@ -4,5 +4,8 @@
   "compatibility_date": "2026-10-01",
   "vars": { "ALLOWED_ORIGIN": "https://nanileb.github.io" },
   // Pools partagés entre amis DraftMaster (routes /pool et /pools)
-  "kv_namespaces": [{ "binding": "POOLS", "id": "61041a9136224ff99b647bcc786bf753" }]
+  "kv_namespaces": [{ "binding": "POOLS", "id": "61041a9136224ff99b647bcc786bf753" }],
+  // PC relié : sélection des champions lue par le compagnon PC (route /pc), un Durable Object par code
+  "durable_objects": { "bindings": [{ "name": "PCLINK", "class_name": "PcLink" }] },
+  "migrations": [{ "tag": "pc-link-v1", "new_sqlite_classes": ["PcLink"] }]
 }

@@ -22,6 +22,14 @@ Les routes `/pool` et `/pools` ont besoin d'un espace Workers KV lié sous le no
 
 L'id se lit dans Cloudflare › Storage & Databases › Workers KV (ou se crée avec `npx wrangler kv namespace create POOLS`). Sans cet espace, la synchro répond `sync_unavailable` et l'application garde la copie du pool contenue dans le lien de partage.
 
+## PC relié (route /pc, Durable Object « PcLink »)
+
+Le compagnon Windows `public/pc/DraftMaster-PC.cmd` (téléchargé depuis https://nanileb.github.io/Draftmaster/pc/) lit la sélection des champions dans le client League et l'envoie sur `POST /pc?id=<code>`. Le téléphone la relit sur `GET /pc?id=<code>` (Profil › PC relié). `champselect.js` ne garde que les bans, les picks et les postes (aucun pseudo).
+
+Un Durable Object par code (`PCLINK`, classe `PcLink`, déclaré dans `wrangler.jsonc` avec sa migration) garde la dernière sélection : contrairement au KV, il répond tout de suite avec la dernière version. Il est créé automatiquement au déploiement, rien à faire dans Cloudflare (Durable Objects « SQLite », disponibles sur l'offre gratuite). Un code sans nouvelles depuis 30 jours est effacé.
+
+Vérification : `https://lol-support-coach.62z7h87vzm.workers.dev/pc?id=TESTTEST` répond `not_found` (et pas `sync_unavailable` ni une erreur Cloudflare).
+
 ## Relancer un déploiement
 
 Workers Builds redéploie à chaque changement de `main` (ou seulement de `worker/` si les Build watch paths sont réglés). Pour relancer sans rien changer au code : modifier un commentaire d'un fichier de `worker/` et le fusionner, ou, dans Cloudflare, Deployments › dernier build › « … » › Retry.

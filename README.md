@@ -59,6 +59,7 @@ Pas de compte. Tout reste sur l'appareil :
 - `dm_an` : résumés des parties analysées dans Profil (analyse complète et dernière game), `dm_an_role` : poste choisi pour l'analyse, `dm_profile_tab` : dernier onglet ouvert du profil ;
 - `dm_team_live` : draft d'équipe suivie en direct (compo choisie, bans, picks des deux côtés), gardée 6 h ;
 - `dm_game` : partie en cours (postes, champions, côté, chrono, drakes) pour la retrouver après un rechargement ; `dm_alerts` : son / vibration des alertes ;
+- `dm_pc` : code du PC relié ; `dm_pc_n` : numéro de la dernière sélection des champions appliquée ;
 - `riotId` ; copies de secours des statistiques (`dm_coach_*`, nom gardé pour ne pas perdre les copies existantes) et de Data Dragon.
 
 Profil › Mon Pool › « Effacer mes données locales » vide tout.
@@ -70,6 +71,12 @@ Le pool est encodé dans un lien `…/Draftmaster/home?add=CODE`, avec un QR cod
 ## Draft d'équipe en direct (onglet Équipe)
 
 Une fois les 5 joueurs assignés, chaque compo proposée a un bouton « Jouer cette draft : suivi en direct ». Pendant la sélection : bans, champions verrouillés chez nous, picks adverses par poste. Dès qu'un champion prévu est banni, pris en face ou contré, l'écran le signale et propose le meilleur remplaçant du pool du joueur (même classement que les recommandations de l'Accueil). La barre du bas compare en permanence le score de draft et la victoire estimée des deux équipes. « Passer en jeu » ouvre le plan d'équipe : lanes gagnantes et à quel moment, risques de jungle, timing de la compo, rôle de chacun en teamfight, 5 contre 5 ou split push, condition de victoire. Logique : `src/lib/teamDraft.js` (réutilise `scoreChampion`, `calculateDraftScore`, `calculateWinProbability`, `analyzeLaneMatchup`, `laneAnalysis`).
+
+## PC relié : sélection des champions remplie depuis le PC
+
+Comme Porofessor : `public/pc/DraftMaster-PC.cmd` (page https://nanileb.github.io/Draftmaster/pc/) est un script Windows à double-cliquer, sans installation. Il lit en lecture seule l'API locale du client League (`/lol-gameflow/v1/gameflow-phase`, `/lol-champ-select/v1/session`) et envoie la sélection au relais (`POST /pc`, voir `worker/README.md`). Au premier lancement il affiche un code de 8 caractères (gardé dans `%APPDATA%\DraftMaster\pc.json`) et crée un raccourci « DraftMaster PC » sur le Bureau.
+
+Sur le téléphone, Profil › PC relié : on tape le code une fois. Ensuite `src/lib/pcLink.js` relit le relais (1,5 s pendant une sélection, 5 s sinon, seulement app ouverte) ; `PcDraftSync` remplit la draft solo de l'Accueil (poste, alliés verrouillés, picks adverses, mon champion verrouillé) et `applyPcSelection` (`teamDraft.js`) la draft d'équipe en direct (bans, picks adverses, nos verrouillages). La saisie à la main reste possible : ce qui a été corrigé n'est pas défait, une nouvelle sélection repart de zéro.
 
 ## Meilleures drafts du patch
 

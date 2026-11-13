@@ -5,6 +5,7 @@ import { useChampions } from '@/hooks/useChampions';
 import { useGameData } from '@/lib/dataLoader';
 import { enrichChampion } from '@/lib/championEngine';
 import { DraftProvider } from '@/lib/DraftContext';
+import PcDraftSync from '@/components/PcDraftSync';
 import BottomTabBar from '@/components/BottomTabBar';
 import ScreenTransition from '@/components/ScreenTransition';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -116,6 +117,7 @@ export default function DraftMaster() {
 
   return (
     <DraftProvider champions={champions}>
+      <PcDraftSync champions={champions} />
       <div className="min-h-screen bg-background max-w-md mx-auto relative overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
         <ScreenTransition direction={slideDir} id={location.pathname}>
           <div className={contentPb}>

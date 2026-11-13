@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import FullAnalysisTab from '@/components/profile/FullAnalysisTab';
 import LastGameTab from '@/components/profile/LastGameTab';
 import { RIOT_TO_ROLE } from '@/lib/coachAnalysis';
+import PcLinkPanel from '@/components/PcLinkPanel';
 
 const TIER_COLORS = {
   IRON: 'text-stone-400', BRONZE: 'text-amber-700', SILVER: 'text-slate-300',
@@ -456,6 +457,7 @@ export default function ProfilePage() {
           <LastGameTab key={riotId} riotId={riotId} refreshKey={refreshKey} />
         )}
 
+        <PcLinkPanel />
         <SettingsPanel />
       </div>
     </div>
