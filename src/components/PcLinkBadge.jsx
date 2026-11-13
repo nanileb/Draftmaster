@@ -6,6 +6,7 @@ import { usePcLink } from '@/lib/pcLink';
 // Petit bandeau « PC relié » : rien quand aucun PC n'est relié
 const TEXT = {
   select: ['Sélection lue sur le PC : tout se remplit seul', 'text-green-win border-green-win/40 bg-green-win/10'],
+  noclient: ['PC relié · lance League, la sélection se remplira toute seule', 'text-muted-foreground border-border'],
   idle: ['PC relié · en attente de la sélection des champions', 'text-muted-foreground border-border'],
   game: ['PC relié · partie en cours', 'text-muted-foreground border-border'],
   waiting: ['PC relié mais pas de nouvelles : lance DraftMaster PC sur l\'ordinateur', 'text-gold border-gold/40 bg-gold/5'],

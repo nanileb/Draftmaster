@@ -8,6 +8,7 @@ import { usePcLink, getPcCode, setPcCode, normCode, showCode } from '@/lib/pcLin
 const PAGE = 'nanileb.github.io/Draftmaster/pc';
 const STATUS = {
   select: ['Sélection en cours : la draft se remplit toute seule', 'text-green-win'],
+  noclient: ['Connecté : le client League n\'est pas lancé sur le PC', 'text-green-win'],
   idle: ['Connecté : en attente de la sélection des champions', 'text-green-win'],
   game: ['Connecté : partie en cours', 'text-green-win'],
   waiting: ['Pas de nouvelles du PC : lance DraftMaster PC sur l\'ordinateur', 'text-gold'],
