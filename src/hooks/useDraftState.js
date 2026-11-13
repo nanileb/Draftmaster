@@ -177,9 +177,10 @@ export function useDraftState(champions) {
 
   // PC relié (src/lib/pcLink.js) : sélection lue dans le client League. fresh = nouvelle sélection (on repart de zéro),
   // sinon on complète sans défaire les corrections faites à la main (un champion déjà placé n'est pas déplacé).
-  const syncFromPc = useCallback((sel, fresh) => {
+  // roleHint : poste à prendre si le client n'en donne pas (partie personnalisée, normale à l'aveugle)
+  const syncFromPc = useCallback((sel, fresh, roleHint = null) => {
     const byId = Object.fromEntries((champions || []).map(c => [c.id, c]));
-    const role = sel.myRole || (fresh ? null : selectedRole);
+    const role = sel.myRole || roleHint || (fresh ? null : selectedRole);
     if (fresh) { setSide(sel.side || 'blue'); setTimerStart(null); setKills(EMPTY_KILLS); setStep(STEPS.DRAFT); }
     if (role !== selectedRole) setSelectedRole(role);
     const likely = (c) => [...(c.dataRoles || []), ...(c.roles || [])];
