@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DATA, shrink, cname, blindKind } from '@/lib/gameData';
 import { getPool } from '@/lib/localStore';
-import { analysedGames, loadRoleGames } from '@/lib/analysisStore';
+import { analysedGames, loadRoleGames, getAnalysis } from '@/lib/analysisStore';
+import { updatedFr } from '@/lib/riot';
 import { AN_ROLES, ROLE_FR, POS_OF, trends, hasChallengerTargets, agoFr, champIdByName } from '@/lib/coachAnalysis';
 import ChampImg from '@/components/profile/ChampImg';
 import LastGameCard from '@/components/profile/LastGameCard';
@@ -11,8 +12,6 @@ import { cn } from '@/lib/utils';
 const ROLE_KEY = 'dm_an_role';
 const readRole = () => { try { return localStorage.getItem(ROLE_KEY); } catch (e) { return null; } };
 const writeRole = r => { try { localStorage.setItem(ROLE_KEY, r); } catch (e) { /* rien */ } };
-// Lancement automatique : une fois par poste et par ouverture de l'app
-const autoDone = new Set();
 
 function Card({ title, children, right }) {
   return (
@@ -70,8 +69,10 @@ export default function FullAnalysisTab({ riotId, defaultRole }) {
     setStatus({ kind: 'info', text: 'Récupération de tes parties…' });
     try {
       const r = await loadRoleGames(riotId, role, s => { setStatus({ kind: 'info', text: `Recherche de tes parties en ${ROLE_FR[role]}… ${s.found}/${s.want}` }); setRev(x => x + 1); }, force);
+      const more = r.more ? ' D\'autres parties restent à analyser : appuie de nouveau sur le bouton dans 2 minutes pour continuer.' : '';
       setStatus(r.found
-        ? { kind: 'ok', text: `${r.found} partie${r.found > 1 ? 's' : ''} classée${r.found > 1 ? 's' : ''} en ${ROLE_FR[role]} analysée${r.found > 1 ? 's' : ''}.` }
+        ? { kind: 'ok', text: `${r.found} partie${r.found > 1 ? 's' : ''} classée${r.found > 1 ? 's' : ''} en ${ROLE_FR[role]} analysée${r.found > 1 ? 's' : ''}.${more}` }
+        : r.more ? { kind: 'info', text: `Pas encore de partie en ${ROLE_FR[role]} trouvée.${more}` }
         : { kind: 'err', text: `Aucune partie classée en ${ROLE_FR[role]} dans tes ${r.total} dernières parties.` });
     } catch (e) {
       setStatus({ kind: 'err', text: e.message || 'Impossible de joindre le relais.' });
@@ -79,11 +80,9 @@ export default function FullAnalysisTab({ riotId, defaultRole }) {
     busyRef.current = false; setBusy(false); setRev(x => x + 1);
   };
 
-  useEffect(() => {
-    const k = riotId + '|' + role;
-    if (!games.length && !autoDone.has(k)) { autoDone.add(k); run(); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, riotId]);
+  // Aucun lancement automatique : l'API Riot n'est appelée que sur le bouton ci-dessous
+  const A = getAnalysis();
+  const updated = A.riotId && all.length ? A.updated : 0;
 
   // Pas de poste choisi auparavant : on suit le poste le plus joué dès que l'historique est chargé
   useEffect(() => {
@@ -123,6 +122,7 @@ export default function FullAnalysisTab({ riotId, defaultRole }) {
           {games.length ? 'Mettre à jour' : 'Analyser mes parties'}
         </button>
       </div>
+      <p className="text-[11px] text-muted-foreground">{updated ? `Analyse mise à jour ${updatedFr(updated)}` : 'Pas encore analysé : appuie sur le bouton pour lancer l\'analyse.'}</p>
       {status && (
         <p className={cn('text-xs leading-snug', status.kind === 'err' ? 'text-red-lose' : status.kind === 'ok' ? 'text-green-win' : 'text-muted-foreground')}>{status.text}</p>
       )}
@@ -130,7 +130,7 @@ export default function FullAnalysisTab({ riotId, defaultRole }) {
       {!games.length && !busy && (
         <div className="glass rounded-xl border border-border p-4 text-center">
           <p className="text-sm">{all.length ? `Aucune partie en ${ROLE_FR[role]} parmi tes parties analysées.` : 'Aucune partie analysée pour l\'instant.'}</p>
-          <p className="text-xs text-muted-foreground mt-1 leading-snug">L'analyse cherche tes 15 dernières parties classées jouées en {ROLE_FR[role]}. Les parties à d'autres postes sont ignorées.</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-snug">L'analyse cherche tes 15 dernières parties classées jouées en {ROLE_FR[role]}, quand tu appuies sur « {all.length ? 'Mettre à jour' : 'Analyser mes parties'} ». Les parties à d'autres postes sont ignorées.</p>
         </div>
       )}
 

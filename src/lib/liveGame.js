@@ -2,6 +2,7 @@
 // Les postes sont devinés (Châtiment, profils, postes joués chez les meilleurs joueurs) puis revalidés par le joueur.
 import { meta, tags, dataRoles } from '@/lib/gameData';
 import { getSettings } from '@/lib/localStore';
+import { limitMessage } from '@/lib/riot';
 
 const ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
 
@@ -43,7 +44,7 @@ export async function fetchLiveGame(champions, myRole = null) {
   catch (e) { throw new Error('Relais Riot injoignable : vérifie ta connexion.'); }
   const j = await r.json().catch(() => ({}));
   if (r.status === 404) throw new Error(j.error === 'account_not_found' ? 'Compte introuvable : vérifie le Riot ID et le serveur dans ton profil.' : 'Pas de partie en cours pour l\'instant. Réessaie une fois l\'écran de chargement affiché.');
-  if (r.status === 429) throw new Error('Trop de demandes à l\'API Riot : réessaie dans quelques secondes.');
+  if (r.status === 429) throw new Error(limitMessage(r, 'appuie de nouveau sur le bouton'));
   if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'Clé Riot refusée ou expirée : il faut la mettre à jour dans le relais Cloudflare.' : 'Erreur du relais (' + r.status + ').');
   const g = j.game || {};
   const byKey = {}; champions.forEach(c => { byKey[String(c.key)] = c; });

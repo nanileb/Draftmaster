@@ -67,8 +67,13 @@ export function getSettings() {
 // coachBase (ancienne adresse des données du coach) n'est plus utilisé : on l'efface au passage
 export function setSettings(s) { const { coachBase, ...rest } = { ...read('dm_settings', {}), ...s }; write('dm_settings', rest); }
 
+// Historique du profil gardé tel quel entre deux ouvertures de l'app : { riotId, matches, rank, at }
+// (l'API Riot n'est appelée que sur le bouton Actualiser)
+export function getHistoryCache() { return read('dm_hist', null); }
+export function setHistoryCache(o) { write('dm_hist', o); }
+
 export function clearAll() {
-  ['userChampionPool', 'draftmaster_pool', 'dm_players', 'dm_profile', 'dm_settings', 'dm_identity', 'dm_sync', 'riotId', 'draftmaster_champions_cache', 'draftmaster_cache_version', 'dm_coach_cache'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* rien */ } });
+  ['userChampionPool', 'draftmaster_pool', 'dm_players', 'dm_profile', 'dm_settings', 'dm_identity', 'dm_sync', 'dm_hist', 'riotId', 'draftmaster_champions_cache', 'draftmaster_cache_version', 'dm_coach_cache'].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* rien */ } });
 }
 
 // ------------------------------------------------------------

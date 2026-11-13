@@ -13,22 +13,33 @@ const ERRORS = {
   bad_request: 'Demande invalide.',
 };
 
+// Limite de la clé Riot (environ 100 demandes / 2 min, partagée avec la collecte automatique des builds)
+export function limitMessage(r, action = 'appuie de nouveau sur Actualiser') {
+  const s = Math.ceil(Number(r && r.headers && r.headers.get('Retry-After')) || 0);
+  const wait = s > 90 ? 'dans ' + Math.ceil(s / 60) + ' min' : s > 0 ? 'dans ' + s + ' s' : 'dans 1 ou 2 minutes';
+  return 'Limite de l\'API Riot atteinte : ' + action + ' ' + wait + '.';
+}
+
+// « il y a 5 min (13/11 à 16:02) » : date des dernières données Riot affichées
+export function updatedFr(ts) {
+  if (!ts) return 'jamais';
+  const d = new Date(ts), m = Math.round((Date.now() - ts) / 60000);
+  const ago = m < 1 ? 'à l\'instant' : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.round(m / 60)} h` : `il y a ${Math.round(m / 1440)} j`;
+  const day = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }), hour = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `${ago} (${day} à ${hour})`;
+}
+
 export async function relay(path, params) {
   const s = getSettings();
   const u = new URL(s.relay.replace(/\/$/, '') + path);
   Object.entries({ platform: s.platform, ...params }).forEach(([k, v]) => { if (v != null) u.searchParams.set(k, v); });
+  // Un seul essai : l'API Riot n'est appelée que quand le joueur appuie sur un bouton, jamais en réessai automatique
   let r;
-  // Limite de la clé Riot (100 demandes / 2 min) : on attend le délai indiqué par Riot puis on réessaie, 2 fois au plus
-  for (let tries = 0; ; tries++) {
-    try { r = await fetch(u.toString()); } catch (e) { throw new Error('Relais Riot injoignable (' + s.relay + ').'); }
-    if (r.status !== 429 || tries >= 2) break;
-    const after = Math.min(15, Math.max(2, Number(r.headers.get('Retry-After')) || 5));
-    await new Promise(res => setTimeout(res, after * 1000));
-  }
+  try { r = await fetch(u.toString()); } catch (e) { throw new Error('Relais Riot injoignable (' + s.relay + ').'); }
   let body = null; try { body = await r.json(); } catch (e) { /* rien */ }
   if (!r.ok) {
     const code = body && body.error;
-    const err = new Error(r.status === 429 ? 'Trop de demandes à l\'API Riot : réessaie dans quelques secondes.' : (ERRORS[code] || ('Erreur du relais (' + r.status + ').')));
+    const err = new Error(r.status === 429 ? limitMessage(r) + ' Ce qui était déjà chargé est gardé.' : (ERRORS[code] || ('Erreur du relais (' + r.status + ').')));
     err.code = code; err.status = r.status; throw err;
   }
   return body;
@@ -68,10 +79,11 @@ function toMatch(m, puuid) {
   };
 }
 
-const matchCache = {};
-export async function fetchMatchHistory(riotId, count = 10, onProgress) {
+// known : parties déjà affichées (cache du profil) ; elles ne sont pas retéléchargées, seules les nouvelles coûtent un appel
+export async function fetchMatchHistory(riotId, count = 10, onProgress, known = []) {
   const { puuid, ids } = await relay('/matches', { riotId, count });
   const list = (ids || []).slice(0, count);
+  const have = {}; (known || []).forEach(m => { if (m && m.matchId) have[m.matchId] = m; });
   const out = [];
   let i = 0;
   // 2 parties à la fois : reste sous la limite de l'API Riot (clé de développement)
@@ -79,9 +91,9 @@ export async function fetchMatchHistory(riotId, count = 10, onProgress) {
     while (i < list.length) {
       const id = list[i++];
       try {
-        const m = matchCache[id] || (matchCache[id] = await relay('/match', { id, lite: 2 }));
-        const x = toMatch(m, puuid); if (x) out.push({ x, at: list.indexOf(id) });
-      } catch (e) { if (e.status === 429) throw e; }
+        const x = have[id] || toMatch(await relay('/match', { id, lite: 2 }), puuid);
+        if (x) out.push({ x, at: list.indexOf(id) });
+      } catch (e) { if (e.status === 429) { i = list.length; throw e; } }
       if (onProgress) onProgress(out.length, list.length);
     }
   }
@@ -89,9 +101,9 @@ export async function fetchMatchHistory(riotId, count = 10, onProgress) {
   return { puuid, matches: out.sort((a, b) => a.at - b.at).map(o => o.x) };
 }
 
-// Rang classé : route /rank (patch du worker). Sans elle, on renvoie [] sans erreur.
+// Rang classé : route /rank (patch du worker). Sans elle, ou en cas d'erreur, on renvoie null (le rang déjà affiché est gardé).
 export async function fetchRank(puuid) {
-  try { const r = await relay('/rank', { puuid }); return r.entries || []; } catch (e) { return []; }
+  try { const r = await relay('/rank', { puuid }); return r.entries || []; } catch (e) { return null; }
 }
 
 // Partie complète avec la chronologie (route /match sans « lite », 2 appels Riot) : sert à l'analyse du profil

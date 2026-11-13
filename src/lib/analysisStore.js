@@ -9,7 +9,7 @@ const write = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch
 
 let mem = null;
 export function getAnalysis() {
-  if (!mem) { const o = read(); mem = { puuid: o.puuid || null, riotId: o.riotId || null, ids: o.ids || [], sums: o.sums || {}, updated: o.updated || 0 }; }
+  if (!mem) { const o = read(); mem = { puuid: o.puuid || null, riotId: o.riotId || null, ids: o.ids || [], sums: o.sums || {}, updated: o.updated || 0, lastChecked: o.lastChecked || 0 }; }
   return mem;
 }
 function save() {
@@ -35,28 +35,26 @@ async function refreshIds(riotId) {
   return A;
 }
 
-const wait = ms => new Promise(r => setTimeout(r, ms));
+// Un seul essai par partie : si Riot répond « trop de demandes », on s'arrête là (les parties déjà analysées restent gardées)
+// et le joueur relance lui-même plus tard. Aucun réessai automatique.
 async function getSum(id, A, force) {
   const c = A.sums[id];
   if (c && c.v === SUM_VERSION && !force) return c;
-  for (let tries = 0; tries < 3; tries++) {
-    try {
-      const s = summarize(await fetchFullMatch(id), A.puuid);
-      if (s) { A.sums[id] = s; save(); }
-      return s;
-    } catch (e) {
-      if (e.status === 429) { await wait(3000); continue; }
-      if (e.status >= 500 || e.status === 404) return null;
-      throw e;
-    }
+  try {
+    const s = summarize(await fetchFullMatch(id), A.puuid);
+    if (s) { A.sums[id] = s; save(); }
+    return s;
+  } catch (e) {
+    if (e.status >= 500 || e.status === 404) return null;
+    throw e;
   }
-  return null;
 }
 
-// Cherche jusqu'à 15 parties jouées au poste demandé (40 téléchargements au plus par passage)
+// Cherche jusqu'à 15 parties jouées au poste demandé (25 téléchargements au plus par appui, soit environ 50 demandes Riot,
+// la moitié de la limite de 2 minutes ; un nouvel appui continue là où on s'est arrêté)
 export async function loadRoleGames(riotId, ROLE, onStatus, force = false) {
   const A = await refreshIds(riotId);
-  const RP = POS_OF[ROLE], WANT = 15, MAXNEW = 40;
+  const RP = POS_OF[ROLE], WANT = 15, MAXNEW = 25;
   let n = 0, found = 0;
   for (const id of A.ids) {
     if (found >= WANT) break;
@@ -69,12 +67,14 @@ export async function loadRoleGames(riotId, ROLE, onStatus, force = false) {
     if (s && s.pos === RP) found++;
   }
   A.updated = Date.now(); save();
-  return { found, total: A.ids.length };
+  const more = n >= MAXNEW && found < WANT;
+  return { found, total: A.ids.length, more };
 }
 
 // Dernière partie classée, quel que soit le poste
 export async function loadLastGame(riotId) {
   const A = await refreshIds(riotId);
+  A.lastChecked = Date.now(); save();
   if (!A.ids.length) return null;
   return getSum(A.ids[0], A);
 }
