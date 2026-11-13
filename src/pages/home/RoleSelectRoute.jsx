@@ -6,10 +6,14 @@ import ImportProfileModal from '@/components/ImportProfileModal';
 import LiveGameButton from '@/components/ingame/LiveGameButton';
 import { Play } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/championEngine';
+import { usePcLink } from '@/lib/pcLink';
 
 export default function RoleSelectRoute({ champions, version, addParam }) {
   const navigate = useNavigate();
   const draft = useDraft();
+  // PC relié : dans le client sans sélection ni partie en cours, l'ancienne draft n'est plus d'actualité
+  const pc = usePcLink();
+  const inClient = pc.status === 'idle';
   // Lien ou QR de partage : …/home?add=CODE → import du joueur et de son pool (pseudo à saisir)
   const [importCode, setImportCode] = useState(addParam || null);
 
@@ -31,7 +35,7 @@ export default function RoleSelectRoute({ champions, version, addParam }) {
         champions={champions}
         liveSlot={(
           <>
-            {draft.selectedRole && (draft.myChampion || draft.allyTeam.length > 0 || draft.enemyTeam.length > 0 || draft.bans.length > 0) && (
+            {!inClient && draft.selectedRole && (draft.myChampion || draft.allyTeam.length > 0 || draft.enemyTeam.length > 0 || draft.bans.length > 0) && (
               <button
                 type="button"
                 onClick={() => navigate(draft.myChampion && draft.enemyTeam.length ? '/home/tips' : '/home/draft')}
