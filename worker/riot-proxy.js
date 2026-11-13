@@ -124,7 +124,7 @@ export default {
   async fetch(req, env) {
     const origin = req.headers.get('Origin') || '';
     const allow = env.ALLOWED_ORIGIN || '*';
-    const cors = { 'Access-Control-Allow-Origin': allow === '*' ? '*' : (origin === allow ? origin : allow), 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Vary': 'Origin' };
+    const cors = { 'Access-Control-Allow-Origin': allow === '*' ? '*' : (origin === allow ? origin : allow), 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Expose-Headers': 'Retry-After', 'Vary': 'Origin' };
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
     const json = (o, s = 200, cache = 'no-store') => new Response(JSON.stringify(o), { status: s, headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': cache } });
     if (allow !== '*' && origin && origin !== allow) return json({ error: 'origin_not_allowed' }, 403);

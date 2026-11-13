@@ -31,14 +31,14 @@ export default function RoleSelectRoute({ champions, version, addParam }) {
         champions={champions}
         liveSlot={(
           <>
-            {draft.selectedRole && draft.myChampion && (
+            {draft.selectedRole && (draft.myChampion || draft.allyTeam.length > 0 || draft.enemyTeam.length > 0 || draft.bans.length > 0) && (
               <button
                 type="button"
-                onClick={() => navigate(draft.enemyTeam.length ? '/home/tips' : '/home/draft')}
+                onClick={() => navigate(draft.myChampion && draft.enemyTeam.length ? '/home/tips' : '/home/draft')}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary text-primary-foreground font-grotesk font-bold text-sm glow-primary active:scale-[0.98] transition-all"
               >
                 <Play className="w-4 h-4" />
-                Reprendre : {draft.myChampion.name} · {ROLE_LABELS[draft.selectedRole]}
+                Reprendre : {draft.myChampion ? draft.myChampion.name + ' · ' : 'draft · '}{ROLE_LABELS[draft.selectedRole]}
               </button>
             )}
             <LiveGameButton champions={champions} compact />

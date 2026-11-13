@@ -60,6 +60,20 @@ async function poll() {
   }
   timer = setTimeout(poll, last.status === 'select' ? 1500 : 5000);
 }
+// Lecture immédiate du relais (bouton « Charger ma partie ») : renvoie l'état à jour, sans attendre la prochaine relecture
+export async function refreshPc() {
+  if (!getPcCode()) return last;
+  for (let i = 0; i < 20 && inflight; i++) await new Promise(r => setTimeout(r, 100));
+  await poll();
+  return last;
+}
+
+// Numéro de la dernière sélection du PC déjà appliquée à la draft solo : une sélection déjà suivie n'efface plus
+// les corrections faites à la main (bans ajoutés, champion choisi) quand on rappuie sur « Charger ma partie »
+const N_KEY = 'dm_pc_n';
+export function appliedN() { try { return Number(localStorage.getItem(N_KEY)) || 0; } catch (e) { return 0; } }
+export function markApplied(n) { try { localStorage.setItem(N_KEY, String(n)); } catch (e) { /* rien */ } }
+
 function kick() { clearTimeout(timer); running = false; if (getPcCode()) poll(); }
 
 let started = false;
