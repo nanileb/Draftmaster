@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchMatchHistory, fetchRank } from '@/lib/riot';
-import { getSettings, setSettings, getProfile, setProfile } from '@/lib/localStore';
+import { fetchMatchHistory, fetchRank, updatedFr } from '@/lib/riot';
+import { getSettings, setSettings, getProfile, setProfile, getHistoryCache, setHistoryCache } from '@/lib/localStore';
 import { RELAY_DEFAULT } from '@/lib/gameData';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -255,8 +255,11 @@ export default function ProfilePage() {
   const [riotId, setRiotId] = useState(() => localStorage.getItem('riotId') || '');
   const [editRiotId, setEditRiotId] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [matches, setMatches] = useState([]);
-  const [rankedStats, setRankedStats] = useState([]);
+  // Dernières données Riot gardées dans ce navigateur : affichées telles quelles, l'API n'est appelée que sur Actualiser
+  const cached = () => { const c = getHistoryCache(); return c && c.riotId === (localStorage.getItem('riotId') || '') ? c : null; };
+  const [matches, setMatches] = useState(() => (cached() || {}).matches || []);
+  const [rankedStats, setRankedStats] = useState(() => (cached() || {}).rank || []);
+  const [updatedAt, setUpdatedAt] = useState(() => (cached() || {}).at || 0);
   const ddVersion = version || '14.1.1';
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -277,9 +280,17 @@ export default function ProfilePage() {
     setError(null);
     setProgress(null);
     try {
-      const res = await fetchMatchHistory(parts[0].trim() + '#' + parts[1].trim(), 10, (d, t) => setProgress(`${d}/${t}`));
+      const c = getHistoryCache();
+      const same = c && c.riotId === id;
+      // Parties déjà affichées : pas retéléchargées, seules les nouvelles coûtent un appel Riot
+      const res = await fetchMatchHistory(parts[0].trim() + '#' + parts[1].trim(), 10, (d, t) => setProgress(`${d}/${t}`), same ? c.matches : []);
+      const rank = await fetchRank(res.puuid);
+      const keepRank = rank || (same ? c.rank || [] : []);
+      const at = Date.now();
       setMatches(res.matches);
-      setRankedStats(await fetchRank(res.puuid));
+      setRankedStats(keepRank);
+      setUpdatedAt(at);
+      setHistoryCache({ riotId: id, matches: res.matches, rank: keepRank, at });
     } catch (e) {
       setError(e.message || 'Erreur lors de la récupération de l\'historique');
     }
@@ -287,15 +298,14 @@ export default function ProfilePage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (riotId) fetchHistory(riotId);
-  }, []);
-
   const handleSaveRiotId = () => {
     if (!editRiotId.includes('#')) return;
+    if (editRiotId === riotId) { setIsEditing(false); return; }
     localStorage.setItem('riotId', editRiotId);
     setRiotId(editRiotId);
     setIsEditing(false);
+    // Nouveau pseudo validé : on charge son historique une fois (c'est un appui du joueur), l'ancien n'est plus affiché
+    setMatches([]); setRankedStats([]); setUpdatedAt(0); setError(null);
     fetchHistory(editRiotId);
   };
 
@@ -346,11 +356,13 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => { fetchHistory(riotId); setRefreshKey(k => k + 1); }}
+                      onClick={() => { fetchHistory(riotId); if (activeTab === 'last') setRefreshKey(k => k + 1); }}
                       disabled={loading}
-                      className="p-1.5 rounded-lg bg-secondary text-muted-foreground"
+                      aria-label="Actualiser depuis Riot"
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-secondary text-muted-foreground text-xs font-semibold"
                     >
                       <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+                      Actualiser
                     </button>
                     <button
                       onClick={() => { setEditRiotId(riotId); setIsEditing(true); }}
@@ -372,6 +384,11 @@ export default function ProfilePage() {
           )}
         </div>
         {rankedStats.length > 0 && <EloDisplay rankedStats={rankedStats} />}
+        {riotId && !isEditing && (
+          <p className="text-[11px] text-muted-foreground mt-2">
+            {loading ? 'Actualisation depuis Riot…' : updatedAt ? `Historique et rang mis à jour ${updatedFr(updatedAt)}` : 'Pas encore chargé : appuie sur Actualiser.'}
+          </p>
+        )}
       </div>
 
 
@@ -422,10 +439,10 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {error && activeTab === 'history' && (
+        {error && (
           <div className="glass rounded-xl p-4 border border-destructive/30 bg-destructive/5 text-center">
             <p className="text-sm text-destructive">{error}</p>
-            <p className="text-xs text-muted-foreground mt-1">Vérifie ton Riot ID et réessaie</p>
+            {!/^Limite/.test(error) && <p className="text-xs text-muted-foreground mt-1">Vérifie ton Riot ID et réessaie</p>}
           </div>
         )}
 
@@ -443,7 +460,7 @@ export default function ProfilePage() {
             )}
             {!error && riotId && matches.length === 0 && (
               <div className="text-center py-16 text-muted-foreground text-sm">
-                Aucune partie classée trouvée.
+                {updatedAt ? 'Aucune partie classée trouvée.' : 'Appuie sur Actualiser, à côté de ton pseudo, pour charger tes dernières parties.'}
               </div>
             )}
           </>
