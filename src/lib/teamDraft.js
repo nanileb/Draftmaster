@@ -43,6 +43,36 @@ export function guessEnemyRole(champion, enemy) {
   return likely.find(r => ROLES.includes(r) && !enemy[r]) || ROLES.find(r => !enemy[r]) || null;
 }
 
+// PC relié : complète la draft d'équipe en direct avec la sélection lue dans le client League (pcLink.readSelection).
+// Ajoute les bans, les picks adverses et nos champions verrouillés ; ne retire rien de ce qui a été saisi à la main
+// (sauf à une nouvelle sélection : pcN = numéro de la sélection déjà suivie).
+// Renvoie le nouvel état, ou le même objet si rien ne change.
+export function applyPcSelection(st, sel, championsById) {
+  if (!sel) return st;
+  const next = { ...st, plan: { ...st.plan }, locked: { ...st.locked }, enemy: { ...st.enemy }, bans: [...st.bans], pcN: sel.n };
+  let changed = st.pcN !== sel.n;
+  // Nouvelle sélection sur le PC alors que cette draft en avait déjà suivi une : on repart d'une sélection vide (la compo prévue reste)
+  if (st.pcN != null && st.pcN !== sel.n) { next.locked = EMPTY(); next.enemy = EMPTY(); next.bans = []; }
+  sel.bans.forEach(id => { if (championsById[id] && !next.bans.includes(id)) { next.bans.push(id); changed = true; } });
+  sel.enemy.forEach(m => {
+    const c = championsById[m.id];
+    if (!c || ROLES.some(r => next.enemy[r] === m.id)) return;
+    const r = m.pos && !next.enemy[m.pos] ? m.pos : guessEnemyRole(c, next.enemy);
+    if (r) { next.enemy[r] = m.id; changed = true; }
+  });
+  // Nos verrouillages : poste donné par le client, sinon le poste où ce champion était prévu, sinon un poste libre plausible
+  [...sel.mine].sort((a, b) => (b.pos ? 1 : 0) - (a.pos ? 1 : 0)).forEach(m => {
+    const c = m.lock && championsById[m.id];
+    if (!c || ROLES.some(r => next.locked[r] === m.id)) return;
+    const free = r => !next.locked[r];
+    const r = (m.pos && free(m.pos) && m.pos) || ROLES.find(x => free(x) && next.plan[x] === m.id)
+      || [...dataRoles(m.id), ...(c.dataRoles || []), ...(c.roles || [])].find(x => ROLES.includes(x) && free(x)) || ROLES.find(free);
+    if (!r) return;
+    next.locked[r] = m.id; next.plan[r] = m.id; changed = true;
+  });
+  return changed ? next : st;
+}
+
 const took = (ids, id) => ids.filter(Boolean).includes(id);
 
 // ------------------------------------------------------------

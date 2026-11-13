@@ -18,6 +18,8 @@ self.addEventListener('fetch', e => {
   }
   // Seulement nos propres fichiers (pas le relais Riot)
   if (u.origin !== location.origin || !u.pathname.startsWith(BASE)) return;
+  // Page et fichier de DraftMaster PC : hors de l'application, jamais mis en cache
+  if (u.pathname.startsWith(BASE + 'pc')) return;
   // Navigation : réseau d'abord, sinon index.html en cache (routes de l'application)
   if (e.request.mode === 'navigate') {
     e.respondWith(fetch(e.request).then(r => { const cp = r.clone(); caches.open(SHELL).then(c => c.put('index.html', cp)); return r; }).catch(() => caches.match('index.html')));

@@ -175,6 +175,39 @@ export function useDraftState(champions) {
     setStep(STEPS.MATCHUP);
   }, []);
 
+  // PC relié (src/lib/pcLink.js) : sélection lue dans le client League. fresh = nouvelle sélection (on repart de zéro),
+  // sinon on complète sans défaire les corrections faites à la main (un champion déjà placé n'est pas déplacé).
+  const syncFromPc = useCallback((sel, fresh) => {
+    const byId = Object.fromEntries((champions || []).map(c => [c.id, c]));
+    const role = sel.myRole || (fresh ? null : selectedRole);
+    if (fresh) { setSide(sel.side || 'blue'); setTimerStart(null); setKills(EMPTY_KILLS); setStep(STEPS.DRAFT); }
+    if (role !== selectedRole) setSelectedRole(role);
+    const likely = (c) => [...(c.dataRoles || []), ...(c.roles || [])];
+    setAllyByRole(prev => {
+      const next = fresh ? { ...EMPTY_BY_ROLE } : { ...prev };
+      const has = id => ROLE_KEYS.some(r => next[r] && next[r].id === id);
+      // Les postes donnés par le client d'abord, puis les autres sur un poste libre plausible
+      [...sel.mine].sort((a, b) => (b.pos ? 1 : 0) - (a.pos ? 1 : 0)).forEach(m => {
+        const c = m.lock && byId[m.id]; if (!c || has(c.id)) return;
+        const r = m.me && role ? role : m.pos && !next[m.pos] && m.pos !== (m.me ? null : role) ? m.pos
+          : likely(c).find(x => ROLE_KEYS.includes(x) && !next[x] && x !== role) || ROLE_KEYS.find(x => !next[x] && x !== role);
+        if (r) next[r] = c;
+      });
+      return next;
+    });
+    setEnemyByRole(prev => {
+      const next = fresh ? { ...EMPTY_BY_ROLE } : { ...prev };
+      sel.enemy.forEach(m => {
+        const c = byId[m.id]; if (!c || ROLE_KEYS.some(r => next[r] && next[r].id === c.id)) return;
+        const r = (m.pos && !next[m.pos] ? m.pos : null) || likely(c).find(x => ROLE_KEYS.includes(x) && !next[x]) || ROLE_KEYS.find(x => !next[x]);
+        if (r) next[r] = c;
+      });
+      return next;
+    });
+    const me = sel.me && byId[sel.me];
+    if (me) setMyChampion(me); else if (fresh) setMyChampion(null);
+  }, [champions, selectedRole]);
+
   const swapEnemyRoles = useCallback((roleA, roleB) => {
     setEnemyByRole(prev => ({
       ...prev,
@@ -276,6 +309,7 @@ export function useDraftState(champions) {
     swapEnemyRoles,
     swapAllyRoles,
     loadLiveGame,
+    syncFromPc,
     side,
     setSide,
     timerStart,

@@ -3,6 +3,7 @@ import { X, Lock, Unlock, Ban, RefreshCw, Plus, Swords, AlertTriangle, ArrowRigh
 import { cn } from '@/lib/utils';
 import ChampionPicker from '@/components/ChampionPicker';
 import { ROLES, ROLE_FR, analyzeLiveDraft } from '@/lib/teamDraft';
+import PcLinkBadge from '@/components/PcLinkBadge';
 
 const ROLE_ICON = { TOP: '🗡️', JUNGLE: '🌿', MID: '⚡', ADC: '🏹', SUPPORT: '💫' };
 const TONE = { bad: 'text-red-lose', warn: 'text-gold', info: 'text-muted-foreground', good: 'text-green-win' };
@@ -68,6 +69,8 @@ export default function TeamLiveDraft({ live, setLive, champions, onClose, onGam
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5" style={{ paddingBottom: 'calc(12rem + env(safe-area-inset-bottom, 0px))' }}>
+        <PcLinkBadge />
+
         {/* Bans */}
         <section>
           <div className="flex items-center justify-between mb-2">
