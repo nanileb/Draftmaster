@@ -243,20 +243,6 @@ function riskText(c) {
   return 'Victoire estimée faible face à cette compo';
 }
 
-// Gardé pour compatibilité : delta de matchup par classe (utilisé seulement sans données)
-const COUNTER_MATRIX = {
-  'Tank-Assassin': 12, 'Tank-Marksman': 10, 'Tank-Mage': 6, 'Tank-Enchanter': 8,
-  'Bruiser-Assassin': 8, 'Bruiser-Marksman': 10, 'Bruiser-Mage': 4, 'Bruiser-Enchanter': 6,
-  'Mage-Tank': 12, 'Mage-Enchanter': 6, 'Mage-Bruiser': 4, 'Mage-Assassin': -12, 'Mage-Marksman': 4,
-  'Assassin-Mage': 12, 'Assassin-Marksman': 10, 'Assassin-Enchanter': 10, 'Assassin-Tank': -12, 'Assassin-Bruiser': -8,
-  'Marksman-Tank': -10, 'Marksman-Bruiser': -8, 'Marksman-Assassin': -10, 'Marksman-Mage': 4, 'Marksman-Enchanter': 6,
-  'Enchanter-Tank': -8, 'Enchanter-Bruiser': -6, 'Enchanter-Assassin': -8, 'Enchanter-Marksman': 4, 'Enchanter-Mage': 2,
-};
-export function getCounterScore(allyChamp, enemyChamp) {
-  if (!allyChamp || !enemyChamp) return { delta: 0 };
-  return { delta: COUNTER_MATRIX[`${allyChamp.class}-${enemyChamp.class}`] ?? 0 };
-}
-
 // ------------------------------------------------------------
 // MATCHUP DE LANE : verdict lu dans counters.json (≥ 20 parties), conseils cohérents
 // (recette 2 n° 2 et 4, méga recette C6)

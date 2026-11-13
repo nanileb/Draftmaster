@@ -17,7 +17,6 @@ export const RELAY_DEFAULT = 'https://lol-support-coach.62z7h87vzm.workers.dev';
 export const ROLES = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
 // Poste Riot (teamPosition) utilisé dans builds.json
 export const POS = { TOP: 'TOP', JUNGLE: 'JUNGLE', MID: 'MIDDLE', ADC: 'BOTTOM', SUPPORT: 'UTILITY' };
-export const POS_TO_ROLE = { TOP: 'TOP', JUNGLE: 'JUNGLE', MIDDLE: 'MID', BOTTOM: 'ADC', UTILITY: 'SUPPORT' };
 // Lane de counters.json
 export const CLANE = { TOP: 'top', JUNGLE: 'jungle', MID: 'middle', ADC: 'bottom', SUPPORT: 'support' };
 
