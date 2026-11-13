@@ -21,12 +21,13 @@ export default function RoleTeamSlots({
   onSetAllyRole,    // (role, champion) => void
   onRemoveAllyRole, // (role) => void
   topPickNames = [],
+  bannedIds = [],   // champions bannis : absents du choix
 }) {
   const [pickerRole, setPickerRole] = useState(null);
 
-  const excludeIds = Object.values(allyByRole)
+  const excludeIds = [...Object.values(allyByRole)
     .filter(Boolean)
-    .map(c => c.id);
+    .map(c => c.id), ...bannedIds];
 
   return (
     <>

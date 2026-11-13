@@ -34,6 +34,9 @@ export default function DraftRoute({ champions, version }) {
       onAddEnemy={draft.addToEnemy}
       onRemoveEnemy={draft.removeFromEnemy}
       onSetMyPick={draft.setMyPick}
+      bans={draft.bans}
+      onAddBan={draft.addBan}
+      onRemoveBan={draft.removeBan}
       onGoToMatchup={() => navigate('/home/matchup')}
       canGoToMatchup={draft.canGoToMatchup}
       version={version}

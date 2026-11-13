@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, User, BarChart2, Lightbulb, BookOpen } from 'lucide-react';
+import { ArrowLeft, User, BarChart2, Lightbulb, BookOpen, Ban, Plus } from 'lucide-react';
 import RoleTeamSlots from '@/components/RoleTeamSlots';
 import TeamSlots from '@/components/TeamSlots';
 import ChampionPicker from '@/components/ChampionPicker';
@@ -22,7 +22,7 @@ function Swords({ className }) {
   );
 }
 
-const PICKER_MODES = { none: null, enemy: 'enemy', my: 'my' };
+const PICKER_MODES = { none: null, enemy: 'enemy', my: 'my', ban: 'ban' };
 
 export default function DraftPage({
   champions,
@@ -49,14 +49,19 @@ export default function DraftPage({
   canGoToMatchup,
   topPickChampions = [],
   version = null,
+  bans = [],
+  onAddBan = () => {},
+  onRemoveBan = () => {},
 }) {
   const [pickerMode, setPickerMode] = useState(PICKER_MODES.none);
   const [activeTab, setActiveTab] = useState('reco');
 
-  const excludeIds = [...allyTeam.map(c => c.id), ...enemyTeam.map(c => c.id)];
+  const excludeIds = [...allyTeam.map(c => c.id), ...enemyTeam.map(c => c.id), ...bans];
+  const byId = Object.fromEntries((champions || []).map(c => [c.id, c]));
 
   const handlePickerSelect = (champion) => {
-    if (pickerMode === PICKER_MODES.enemy) onAddEnemy(champion);
+    if (pickerMode === PICKER_MODES.ban) onAddBan(champion);
+    else if (pickerMode === PICKER_MODES.enemy) onAddEnemy(champion);
     else if (pickerMode === PICKER_MODES.my) onSetMyPick(champion);
   };
 
@@ -81,6 +86,28 @@ export default function DraftPage({
         <PcLinkBadge className="mt-4" />
         <LiveGameButton champions={champions} role={selectedRole} compact className="pt-4" />
 
+        {/* Bans des deux équipes : remplis par le PC relié, ou à la main */}
+        <div className="glass rounded-xl p-3 mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Bans ({bans.length}/10)</p>
+            <button onClick={() => setPickerMode(PICKER_MODES.ban)} className="text-xs font-semibold text-primary flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-primary/10">
+              <Plus className="w-3.5 h-3.5" /> Ban
+            </button>
+          </div>
+          {bans.length ? (
+            <div className="flex flex-wrap gap-2">
+              {bans.map(id => (
+                <button key={id} onClick={() => onRemoveBan(id)} className="relative" aria-label={`Retirer le ban de ${byId[id]?.name || id}`}>
+                  {byId[id]?.iconUrl
+                    ? <img src={byId[id].iconUrl} alt={byId[id].name} className="w-9 h-9 rounded-lg grayscale opacity-70" />
+                    : <span className="text-xs px-2 py-1 rounded bg-secondary">{byId[id]?.name || id}</span>}
+                  <Ban className="w-4 h-4 text-red-lose absolute -top-1 -right-1 bg-background rounded-full" />
+                </button>
+              ))}
+            </div>
+          ) : <p className="text-xs text-muted-foreground">Ajoute les bans des deux équipes : ils sortent des recommandations. Avec le PC relié, ils arrivent tout seuls.</p>}
+        </div>
+
         {/* Ally slots by role */}
         <div className="py-4 space-y-3">
           <RoleTeamSlots
@@ -92,6 +119,7 @@ export default function DraftPage({
             onSetAllyRole={onSetAllyRole}
             onRemoveAllyRole={onRemoveAllyRole}
             topPickNames={topPickChampions}
+            bannedIds={bans}
           />
 
           {/* Enemy slots (flat) */}
@@ -198,7 +226,7 @@ export default function DraftPage({
           onClose={() => setPickerMode(PICKER_MODES.none)}
           excludeIds={excludeIds}
           userPool={userPool}
-          title={pickerMode === PICKER_MODES.my ? 'Mon Champion' : 'Pick Ennemi'}
+          title={pickerMode === PICKER_MODES.my ? 'Mon Champion' : pickerMode === PICKER_MODES.ban ? 'Champion banni' : 'Pick Ennemi'}
           topPickNames={topPickChampions}
         />
       )}

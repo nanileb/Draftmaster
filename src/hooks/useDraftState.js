@@ -36,6 +36,7 @@ function restoreGame(champions) {
   return {
     role: g.role, ally: back(g.ally), enemy: back(g.enemy), me: (g.me && byId[g.me]) || null,
     side: g.side === 'red' ? 'red' : 'blue', timerStart: g.timerStart || null, kills: g.kills || EMPTY_KILLS,
+    bans: (g.bans || []).filter(id => byId[id]),
   };
 }
 
@@ -49,6 +50,8 @@ export function useDraftState(champions) {
   // enemyByRole: { TOP: champion|null, ... }
   const [enemyByRole, setEnemyByRole] = useState(init ? init.enemy : { ...EMPTY_BY_ROLE });
   const [myChampion, setMyChampion] = useState(init ? init.me : null);
+  // Bans des deux équipes (ids), lus sur le PC relié ou ajoutés à la main
+  const [bans, setBans] = useState(init ? init.bans : []);
   const [userPool, setUserPool] = useState([]);
   const [poolLoaded, setPoolLoaded] = useState(false);
   // En jeu : côté de la carte, début du chrono (horodatage) et objectifs tués
@@ -63,13 +66,13 @@ export function useDraftState(champions) {
     setRestored(true);
     const g = restoreGame(champions); if (!g) return;
     setSelectedRole(g.role); setAllyByRole(g.ally); setEnemyByRole(g.enemy); setMyChampion(g.me);
-    setSide(g.side); setTimerStart(g.timerStart); setKills(g.kills);
+    setSide(g.side); setTimerStart(g.timerStart); setKills(g.kills); setBans(g.bans);
   }, [champions, restored]);
   useEffect(() => {
     if (!restored) return;
     if (!selectedRole) { writeGame(null); return; }
-    writeGame({ role: selectedRole, ally: idsOf(allyByRole), enemy: idsOf(enemyByRole), me: myChampion ? myChampion.id : null, side, timerStart, kills, savedAt: Date.now() });
-  }, [restored, selectedRole, allyByRole, enemyByRole, myChampion, side, timerStart, kills]);
+    writeGame({ role: selectedRole, ally: idsOf(allyByRole), enemy: idsOf(enemyByRole), me: myChampion ? myChampion.id : null, side, timerStart, kills, bans, savedAt: Date.now() });
+  }, [restored, selectedRole, allyByRole, enemyByRole, myChampion, side, timerStart, kills, bans]);
 
   // Pool : gardé dans ce navigateur (plus de compte Base44)
   useEffect(() => {
@@ -100,8 +103,8 @@ export function useDraftState(champions) {
 
   const recommendations = useMemo(() => {
     if (!selectedRole || champions.length === 0) return { best: null, alternatives: [], risky: [] };
-    return getRecommendations(selectedRole, champions, allyByRole, enemyByRole, userPool);
-  }, [selectedRole, champions, allyByRole, enemyByRole, userPool]);
+    return getRecommendations(selectedRole, champions, allyByRole, enemyByRole, userPool, bans);
+  }, [selectedRole, champions, allyByRole, enemyByRole, userPool, bans]);
 
   // ── Actions ──────────────────────────────────────────────
 
@@ -110,6 +113,7 @@ export function useDraftState(champions) {
     setAllyByRole({ ...EMPTY_BY_ROLE });
     setEnemyByRole({ ...EMPTY_BY_ROLE });
     setMyChampion(null);
+    setBans([]);
     setSide('blue');
     setTimerStart(null);
     setKills(EMPTY_KILLS);
@@ -182,6 +186,9 @@ export function useDraftState(champions) {
     const byId = Object.fromEntries((champions || []).map(c => [c.id, c]));
     const role = sel.myRole || roleHint || (fresh ? null : selectedRole);
     if (fresh) { setSide(sel.side || 'blue'); setTimerStart(null); setKills(EMPTY_KILLS); setStep(STEPS.DRAFT); }
+    // Bans : ceux du client, plus ceux ajoutés à la main (sauf nouvelle sélection)
+    const pcBans = (sel.bans || []).filter(id => byId[id]);
+    setBans(prev => (fresh ? pcBans : [...new Set([...prev, ...pcBans])]));
     if (role !== selectedRole) setSelectedRole(role);
     const likely = (c) => [...(c.dataRoles || []), ...(c.roles || [])];
     setAllyByRole(prev => {
@@ -268,7 +275,13 @@ export function useDraftState(champions) {
   const goToMatchup = useCallback(() => setStep(STEPS.MATCHUP), []);
   const goToTips = useCallback(() => setStep(STEPS.TIPS), []);
 
+  const addBan = useCallback((champion) => {
+    if (champion) setBans(prev => (prev.includes(champion.id) ? prev : [...prev, champion.id]));
+  }, []);
+  const removeBan = useCallback((id) => setBans(prev => prev.filter(x => x !== id)), []);
+
   const resetDraft = useCallback(() => {
+    setBans([]);
     setAllyByRole({ ...EMPTY_BY_ROLE });
     setEnemyByRole({ ...EMPTY_BY_ROLE });
     setMyChampion(null);
@@ -311,6 +324,9 @@ export function useDraftState(champions) {
     swapAllyRoles,
     loadLiveGame,
     syncFromPc,
+    bans,
+    addBan,
+    removeBan,
     side,
     setSide,
     timerStart,
