@@ -1,7 +1,7 @@
 // En jeu : lane, chronologie et ordre d'achat. Port des onglets « Lane / Botlane / Jungle », « Timings » et
 // de la mise en page du build du coach LoL (lol-support-coach/app.js), adapté aux postes de DraftMaster (TOP … SUPPORT).
 // Partie en jeu : m = { role, me, ally: { TOP: id, … }, enemy: { TOP: id, … }, side: 'blue' | 'red', kills }
-import { DATA, DD, meta, cname, tags, champ, iname, itemExists, BUILD, counterDuel, shrink, earlyOf, isAP, isEngager, isFront, inList } from '@/lib/gameData';
+import { DATA, DD, meta, cname, tags, champ, iname, itemExists, BUILD, counterDuel, shrink, earlyOf, isAP, isEngager, isFront, inList } from './gameData.js';
 
 export const ROLE_ORDER = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
 export const LANE_TAB = { TOP: 'Lane', JUNGLE: 'Jungle', MID: 'Lane', ADC: 'Botlane', SUPPORT: 'Botlane' };
