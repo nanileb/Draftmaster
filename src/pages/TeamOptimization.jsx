@@ -107,8 +107,9 @@ export default function TeamOptimization({ champions, version, onClose, embedded
 
   return (
     <div className={embedded ? "flex flex-col bg-background" : "fixed inset-0 z-50 flex flex-col bg-background animate-fade-in overflow-y-auto"}>
-      {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 border-b border-border bg-background/90 backdrop-blur-lg">
+      {/* En-tête et onglets collés ensemble en haut (le contenu ne passe plus sous les onglets en défilant) */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
         {!embedded && (
           <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-secondary tap-target" aria-label="Fermer">
             <X className="w-5 h-5" />
@@ -121,7 +122,7 @@ export default function TeamOptimization({ champions, version, onClose, embedded
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 px-4 py-3 border-b border-border sticky top-12 bg-background/80 backdrop-blur-lg">
+      <div className="flex gap-2 px-4 py-3 border-b border-border">
         <button
           onClick={() => setActiveTab('team')}
           className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
@@ -144,6 +145,7 @@ export default function TeamOptimization({ champions, version, onClose, embedded
           <Plus className="w-4 h-4 inline mr-1.5" />
           Joueurs
         </button>
+      </div>
       </div>
 
       {/* Content */}

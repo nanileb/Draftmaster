@@ -138,7 +138,7 @@ export default function TeamAssignment({
                 </button>
 
                 {showDropdown === role && (
-                   <div className="absolute top-full left-0 right-0 mt-1 glass rounded-xl border border-border overflow-hidden z-20">
+                   <div ref={el => { if (el) requestAnimationFrame(() => el.scrollIntoView({ block: "nearest", behavior: "smooth" })); }} className="mt-1 glass rounded-xl border border-border overflow-hidden scroll-mb-24">
                      {(() => {
                        const availableForRole = getAvailablePlayersForRole(role);
                        return availableForRole.length === 0 ? (
