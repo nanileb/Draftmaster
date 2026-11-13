@@ -184,11 +184,11 @@ export function calculateWinProbability(allyByRole, enemyByRole) {
 // ------------------------------------------------------------
 const MASTERY_BONUS = { main: 1.5, comfortable: 1, beginner: 0 };
 
-export function getRecommendations(role, allChampions, allyByRole, enemyByRole, userPool = []) {
+export function getRecommendations(role, allChampions, allyByRole, enemyByRole, userPool = [], bans = []) {
   const empty = { best: null, alternatives: [], risky: [] };
   if (!allChampions || allChampions.length === 0) return empty;
   const ally = toIds(allyByRole), enemy = toIds(enemyByRole);
-  const taken = new Set([...Object.values(ally), ...Object.values(enemy)].filter(Boolean));
+  const taken = new Set([...Object.values(ally), ...Object.values(enemy), ...(bans || [])].filter(Boolean));
   const hasData = !!(DATA.builds && DATA.builds.builds);
   const eligible = allChampions.filter(c => !taken.has(c.id) && (
     (c.roles || []).includes(role) || (userPool || []).some(p => p.championId === c.id && p.roles && p.roles[role])
