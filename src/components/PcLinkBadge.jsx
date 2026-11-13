@@ -8,6 +8,7 @@ const TEXT = {
   select: ['Sélection lue sur le PC : tout se remplit seul', 'text-green-win border-green-win/40 bg-green-win/10'],
   idle: ['PC relié · en attente de la sélection des champions', 'text-muted-foreground border-border'],
   game: ['PC relié · partie en cours', 'text-muted-foreground border-border'],
+  paused: ['DraftMaster PC s\'est fermé pour la partie : relance-le avant la prochaine', 'text-muted-foreground border-border'],
   waiting: ['PC relié mais pas de nouvelles : lance DraftMaster PC sur l\'ordinateur', 'text-gold border-gold/40 bg-gold/5'],
   error: ['PC relié · relais injoignable pour l\'instant', 'text-gold border-gold/40 bg-gold/5'],
 };

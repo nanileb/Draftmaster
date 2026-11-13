@@ -10,6 +10,7 @@ const STATUS = {
   select: ['Sélection en cours : la draft se remplit toute seule', 'text-green-win'],
   idle: ['Connecté : en attente de la sélection des champions', 'text-green-win'],
   game: ['Connecté : partie en cours', 'text-green-win'],
+  paused: ['DraftMaster PC s\'est fermé pour la partie : relance-le avant la prochaine sélection', 'text-muted-foreground'],
   waiting: ['Pas de nouvelles du PC : lance DraftMaster PC sur l\'ordinateur', 'text-gold'],
   error: ['Relais injoignable pour l\'instant', 'text-gold'],
 };
@@ -32,7 +33,7 @@ export default function PcLinkPanel() {
     <div className="glass rounded-xl border border-border mt-4">
       <button onClick={() => setOpen(o => !o)} className="w-full flex items-center gap-2 p-3 text-left">
         <Monitor className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-semibold flex-1">PC relié {code && <span className={cn('text-xs font-medium', st ? st[1] : 'text-muted-foreground')}>· {status === 'waiting' ? 'hors ligne' : status === 'error' ? 'relais injoignable' : 'connecté'}</span>}</span>
+        <span className="text-sm font-semibold flex-1">PC relié {code && <span className={cn('text-xs font-medium', st ? st[1] : 'text-muted-foreground')}>· {status === 'paused' ? 'en pause' : status === 'waiting' ? 'hors ligne' : status === 'error' ? 'relais injoignable' : 'connecté'}</span>}</span>
         {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {open && (

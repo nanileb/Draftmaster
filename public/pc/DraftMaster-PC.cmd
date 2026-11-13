@@ -13,10 +13,11 @@ exit /b
 # - Lecture seule : uniquement des lectures (GET) sur l'API locale du client League, comme Porofessor.
 #   Rien n'est cliqué, choisi ou modifié dans le jeu.
 # - Envoyé : la phase du client et la sélection des champions (bans, picks, postes), rien d'autre.
+# - Se ferme tout seul quand la partie commence (rien ne tourne pendant la partie).
 # - Réglages : %APPDATA%\DraftMaster\pc.json (code du PC et clé secrète). Supprimer ce fichier donne un nouveau code.
 # ============================================================
 $ErrorActionPreference = 'Stop'
-$Version = '1.0'
+$Version = '1.1'
 $Relay = 'https://lol-support-coach.62z7h87vzm.workers.dev'
 try { $Host.UI.RawUI.WindowTitle = 'DraftMaster PC' } catch {}
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -189,7 +190,7 @@ function Show-Status([string]$phase, [string]$send) {
   Write-Host '  Téléphone     : ' -NoNewline
   if ($send -like 'OK*') { Write-Host $send -ForegroundColor Green } else { Write-Host $send -ForegroundColor Red }
   Write-Host ''
-  Write-Host '  Laisse cette fenêtre ouverte pendant que tu joues (tu peux la réduire). Ferme-la pour arrêter.' -ForegroundColor DarkGray
+  Write-Host '  Laisse cette fenêtre ouverte (tu peux la réduire) : elle se ferme toute seule quand la partie commence.' -ForegroundColor DarkGray
   Write-Host '  Lecture seule : DraftMaster PC lit la sélection des champions, il ne touche à rien dans le jeu.' -ForegroundColor DarkGray
   if ($Shortcut) { Write-Host ''; Write-Host "  $Shortcut" -ForegroundColor DarkGray }
 }
@@ -202,6 +203,7 @@ $lastSig = ''
 $lastSent = [DateTime]::MinValue
 $send = 'en attente du premier envoi'
 $fails = 0
+$sawSelect = $false
 Show-Status 'Closed' $send
 while ($true) {
  try {
@@ -246,6 +248,15 @@ while ($true) {
     }
   }
   Show-Status $phase $send
+  # Sélection terminée et partie lancée : on se ferme pour ne rien consommer en jeu
+  if ($phase -eq 'ChampSelect') { $sawSelect = $true }
+  if ($sawSelect -and (@('GameStart', 'InProgress', 'Reconnect') -contains $phase)) {
+    Write-Host ''
+    Write-Host '  Sélection terminée, la partie commence : DraftMaster PC se ferme pour ne rien consommer en jeu.' -ForegroundColor Cyan
+    Write-Host '  Relance le raccourci « DraftMaster PC » avant ta prochaine partie.' -ForegroundColor DarkGray
+    Start-Sleep -Seconds 4
+    exit 0
+  }
  } catch {
   # Erreur imprévue (client qui redémarre, etc.) : on recommence au tour suivant
   $lcu = $null; $phase = 'Closed'

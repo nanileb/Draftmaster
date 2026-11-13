@@ -23,7 +23,8 @@ export function setPcCode(code) {
 // ------------------------------------------------------------
 // État partagé : { status, data }
 // status : 'off' (pas de PC relié), 'waiting' (le PC n'a encore rien envoyé ou ne répond plus),
-//          'idle' (PC allumé, pas de sélection), 'select' (sélection en cours), 'game' (partie lancée), 'error'
+//          'idle' (PC allumé, pas de sélection), 'select' (sélection en cours), 'game' (partie lancée),
+//          'paused' (le PC s'est fermé tout seul au lancement de la partie), 'error'
 // ------------------------------------------------------------
 let last = { status: getPcCode() ? 'waiting' : 'off', data: null };
 const listeners = new Set();
@@ -32,9 +33,10 @@ const emit = () => listeners.forEach(f => f(last));
 const STALE = 60 * 1000; // le PC envoie un signe de vie toutes les 20 s
 export function statusOf(j) {
   if (!j || j.error) return 'waiting';
-  if ((j.now || Date.now()) - (j.seen || 0) > STALE || j.phase === 'Closed') return 'waiting';
+  const ingame = ['GameStart', 'InProgress', 'Reconnect'].includes(j.phase);
+  if ((j.now || Date.now()) - (j.seen || 0) > STALE || j.phase === 'Closed') return ingame ? 'paused' : 'waiting';
   if (j.phase === 'ChampSelect' && j.cs) return 'select';
-  if (['GameStart', 'InProgress', 'Reconnect'].includes(j.phase)) return 'game';
+  if (ingame) return 'game';
   return 'idle';
 }
 
