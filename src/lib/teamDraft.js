@@ -7,7 +7,7 @@
 // score de draft (calculateDraftScore), victoire estimée (calculateWinProbability), lane bot (laneAnalysis).
 // Imports relatifs : utilisable dans le navigateur et sous Node (tests).
 // ============================================================
-import { ROLES, meta, cname, tags, isAP, isEngager, isZoneControl, isFront, isAssassin, scoreChampion, duelResult, dataRoles } from './gameData.js';
+import { ROLES, meta, cname, tags, isAP, isEngager, isZoneControl, isFront, isAssassin, scoreChampion, duelResult, dataRoles, teamEstimate } from './gameData.js';
 import { calculateDraftScore, calculateWinProbability, getDraftScoreLabel, detectSynergies, getWinCondition, analyzeLaneMatchup, shortReason } from './championEngine.js';
 import { laneAnalysis } from './inGame.js';
 
@@ -101,7 +101,15 @@ export function analyzeLiveDraft(st, championsById) {
   // Compo retenue pour les totaux : verrouillé > prévu > remplaçant proposé
   const ours = EMPTY();
   ROLES.forEach(r => { ours[r] = pick[r] || (rows[r].suggestion && rows[r].suggestion.id) || null; });
-  return { rows, ours, totals: draftTotals(ours, st.enemy, championsById) };
+  // Barre du bas : seulement les champions réellement sélectionnés (verrouillés chez nous, picks adverses),
+  // mise à jour à chaque pick ; la projection montre ce que donnerait la compo prévue complète
+  const selected = EMPTY(); ROLES.forEach(r => { selected[r] = st.locked[r] || null; });
+  return {
+    rows, ours, selected,
+    totals: draftTotals(selected, st.enemy, championsById),
+    projected: draftTotals(ours, st.enemy, championsById),
+    breakdown: draftBreakdown(selected, st.enemy, championsById),
+  };
 }
 
 // Barre du bas : score de draft et victoire estimée des deux côtés
@@ -111,13 +119,45 @@ export function draftTotals(ours, enemy, championsById) {
   const aList = ROLES.map(r => A[r]).filter(Boolean), eList = ROLES.map(r => E[r]).filter(Boolean);
   const usScore = aList.length ? calculateDraftScore(aList, eList, A, E) : null;
   const themScore = eList.length ? calculateDraftScore(eList, aList, E, A) : null;
-  const win = aList.length ? calculateWinProbability(A, E) : 50;
+  // Victoire estimée dès le premier pick, d'un côté comme de l'autre (calculateWinProbability renvoie 50 sans allié)
+  const win = aList.length ? calculateWinProbability(A, E) : eList.length ? teamEstimate(ours, enemy).win : 50;
   return {
     us: { score: usScore, win, label: usScore != null ? getDraftScoreLabel(usScore).label : null, n: aList.length },
     them: { score: themScore, win: 100 - win, label: themScore != null ? getDraftScoreLabel(themScore).label : null, n: eList.length },
     bestDraft: usScore == null || themScore == null ? null : usScore > themScore ? 'us' : themScore > usScore ? 'them' : 'even',
     bestWin: win > 50 ? 'us' : win < 50 ? 'them' : 'even',
   };
+}
+
+// Détail du score et de la victoire estimée : ce qui pèse pour chaque équipe
+// (mêmes éléments que calculateDraftScore et teamEstimate, écrits en français)
+const STYLE_FR = { 'Protect the Carry': 'protéger le carry', 'Full Engage': 'engage à 5', Poke: 'poke', 'Pick / Catch': 'pick', Scaling: 'fin de partie', Dive: 'plongée' };
+const pc = x => String(Math.round(x * 10) / 10).replace('.', ',');
+export function draftBreakdown(ours, enemy, championsById) {
+  const by = championsById || {};
+  const side = (team) => {
+    const ids = ROLES.map(r => team[r]).filter(Boolean);
+    if (!ids.length) return [];
+    const out = [];
+    const ap = ids.filter(id => isAP(id)).length, ad = ids.length - ap;
+    if (ap && ad) out.push({ tone: 'good', text: `Dégâts mixtes : ${ap} AP, ${ad} AD` });
+    else if (ids.length >= 3) out.push({ tone: 'bad', text: ap ? `Full AP (${ap}) : facile à contrer en résistance magique` : `Full AD (${ad}) : facile à contrer en armure` });
+    const eng = ids.filter(isEngager), fr = ids.filter(isFront);
+    if (eng.length) out.push({ tone: 'good', text: `Engage : ${list(eng)}` }); else if (ids.length >= 4) out.push({ tone: 'bad', text: 'Pas d\'engage' });
+    if (fr.length) out.push({ tone: 'good', text: `Frontline : ${list(fr)}` }); else if (ids.length >= 4) out.push({ tone: 'bad', text: 'Pas de frontline' });
+    const peel = ids.filter(id => (meta().supports[id] || {}).peel >= 3 || (by[id] && by[id].class === 'Enchanter'));
+    if (peel.length) out.push({ tone: 'good', text: `Protection du carry : ${list(peel)}` });
+    const syn = detectSynergies(ids.map(id => by[id]).filter(Boolean));
+    if (syn.length) out.push({ tone: 'info', text: `Style : ${syn.map(x => STYLE_FR[x.type] || x.type).join(', ')}` });
+    return out;
+  };
+  // Duels de lane et duo bot mesurés (teamEstimate), du point de vue de notre équipe
+  const est = teamEstimate(ours, enemy);
+  const duels = est.detail.map(([r, v, cd]) => ({ role: r, tone: v > 0.5 ? 'good' : v < -0.5 ? 'bad' : 'info',
+    text: `${ROLE_FR[r]} : ${cname(ours[r])} contre ${cname(enemy[r])}, ${pc(cd.wr)} % de victoires, ${v > 0.5 ? 'mieux que' : v < -0.5 ? 'moins bien que' : 'proche de'} sa moyenne (${pc(cd.avg)} %, ${cd.n} parties)` }));
+  // Force individuelle de chaque champion à son poste (parties des meilleurs joueurs)
+  const solo = (team) => ROLES.filter(r => team[r]).map(r => { const x = scoreChampion(team[r], r, {}, {}); return { role: r, id: team[r], score: x.score, est: x.est }; });
+  return { us: side(ours), them: side(enemy), duels, soloUs: solo(ours), soloThem: solo(enemy) };
 }
 
 // ------------------------------------------------------------
