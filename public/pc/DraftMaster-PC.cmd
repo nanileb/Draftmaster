@@ -16,7 +16,7 @@ exit /b
 # - Réglages : %APPDATA%\DraftMaster\pc.json (code du PC et clé secrète). Supprimer ce fichier donne un nouveau code.
 # ============================================================
 $ErrorActionPreference = 'Stop'
-$Version = '1.2'
+$Version = '1.3'
 $Relay = 'https://lol-support-coach.62z7h87vzm.workers.dev'
 try { $Host.UI.RawUI.WindowTitle = 'DraftMaster PC' } catch {}
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -50,8 +50,8 @@ public static class DmHttp {
         req.Proxy = null;
         req.ServerCertificateValidationCallback = AcceptLocal;
       }
-      if (auth != null) req.Headers["Authorization"] = auth;
-      if (body != null) {
+      if (!string.IsNullOrEmpty(auth)) req.Headers["Authorization"] = auth;
+      if (!string.IsNullOrEmpty(body)) {
         byte[] b = Encoding.UTF8.GetBytes(body);
         req.ContentType = "application/json";
         req.ContentLength = b.Length;
@@ -255,8 +255,8 @@ while ($true) {
   if (-not $lcu) { $lcu = Get-Lcu }
   if ($lcu) {
     $r = Lcu-Get $lcu '/lol-gameflow/v1/gameflow-phase'
+    if ($r.Status -ne 0) { $script:LcuWhy = '' }
     if ($r.Status -eq 0) { $lcu = $null; $script:LcuWhy = 'League trouvé mais il ne répond pas (' + ([string]$r.Text).Trim() + '), nouvel essai automatique' }
-    else { $script:LcuWhy = '' }
     elseif ($r.Status -eq 200) { $phase = ($r.Text -replace '[^A-Za-z]', '') }
     elseif ($r.Status -eq 401) { $lcu = $null; $phase = 'None' }
     else { $phase = 'None' }
