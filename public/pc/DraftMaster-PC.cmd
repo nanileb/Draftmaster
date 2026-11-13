@@ -16,7 +16,7 @@ exit /b
 # - Réglages : %APPDATA%\DraftMaster\pc.json (code du PC et clé secrète). Supprimer ce fichier donne un nouveau code.
 # ============================================================
 $ErrorActionPreference = 'Stop'
-$Version = '1.1'
+$Version = '1.2'
 $Relay = 'https://lol-support-coach.62z7h87vzm.workers.dev'
 try { $Host.UI.RawUI.WindowTitle = 'DraftMaster PC' } catch {}
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -138,7 +138,41 @@ try {
 
 # ------------------------------------------------------------
 # Client League : port et mot de passe de son API locale (ligne de commande du client, sinon fichier lockfile)
+# $LcuWhy explique à l'écran pourquoi le client n'est pas trouvé.
 # ------------------------------------------------------------
+$LcuWhy = ''
+function Get-LolDirs($proc) {
+  $dirs = New-Object System.Collections.ArrayList
+  $add = { param($p) if ($p) { $p = ([string]$p).Trim().Trim('"').Replace('/', '\').TrimEnd('\'); if ($p -and -not $dirs.Contains($p)) { [void]$dirs.Add($p) } } }
+  if ($proc -and $proc.ExecutablePath) { & $add (Split-Path $proc.ExecutablePath) }
+  foreach ($n in 'LeagueClientUx', 'LeagueClient') {
+    try { Get-Process -Name $n -ErrorAction SilentlyContinue | ForEach-Object { if ($_.Path) { & $add (Split-Path $_.Path) } } } catch {}
+  }
+  # Dossier d'installation noté par le Riot Client
+  try {
+    $y = Join-Path $env:ProgramData 'Riot Games\Metadata\league_of_legends.live\league_of_legends.live.product_settings.yaml'
+    if (Test-Path -LiteralPath $y) {
+      $m = [regex]::Match([IO.File]::ReadAllText($y), 'product_install_full_path:\s*"?([^"\r\n]+)')
+      if ($m.Success) { & $add $m.Groups[1].Value }
+    }
+  } catch {}
+  try {
+    $j = Join-Path $env:ProgramData 'Riot Games\RiotClientInstalls.json'
+    if (Test-Path -LiteralPath $j) {
+      [regex]::Matches([IO.File]::ReadAllText($j), '"([^"]*League of Legends[^"]*?)/?"\s*:') | ForEach-Object { & $add $_.Groups[1].Value }
+    }
+  } catch {}
+  # Emplacements habituels, sur chaque disque
+  try {
+    foreach ($dr in [IO.DriveInfo]::GetDrives()) {
+      if ($dr.DriveType -ne 'Fixed') { continue }
+      $r = $dr.RootDirectory.FullName
+      foreach ($sub in 'Riot Games\League of Legends', 'Program Files\Riot Games\League of Legends', 'Program Files (x86)\Riot Games\League of Legends', 'Games\Riot Games\League of Legends', 'Jeux\Riot Games\League of Legends', 'League of Legends') { & $add (Join-Path $r $sub) }
+    }
+  } catch {}
+  return $dirs
+}
+
 function Get-Lcu {
   $proc = $null
   try { $proc = Get-CimInstance -ClassName Win32_Process -Filter "Name = 'LeagueClientUx.exe'" -ErrorAction Stop | Select-Object -First 1 } catch {}
@@ -147,11 +181,9 @@ function Get-Lcu {
     $tok = [regex]::Match($proc.CommandLine, '--remoting-auth-token=([^"\s]+)').Groups[1].Value
     if ($port -and $tok) { return @{ Port = $port; Token = $tok } }
   }
-  if (-not $proc -and -not (Get-Process -Name 'LeagueClientUx' -ErrorAction SilentlyContinue)) { return $null }
-  $dirs = @()
-  if ($proc -and $proc.ExecutablePath) { $dirs += (Split-Path $proc.ExecutablePath) }
-  $dirs += 'C:\Riot Games\League of Legends'
-  foreach ($d in $dirs) {
+  $running = $proc -or (Get-Process -Name 'LeagueClientUx', 'LeagueClient' -ErrorAction SilentlyContinue)
+  if (-not $running) { $script:LcuWhy = ''; return $null }
+  foreach ($d in (Get-LolDirs $proc)) {
     $f = Join-Path $d 'lockfile'
     if (Test-Path -LiteralPath $f) {
       try {
@@ -163,6 +195,7 @@ function Get-Lcu {
       } catch {}
     }
   }
+  $script:LcuWhy = 'League est ouvert mais DraftMaster PC n''arrive pas à le lire : ferme cette fenêtre et relance DraftMaster PC par clic droit > Exécuter en tant qu''administrateur'
   return $null
 }
 
@@ -183,7 +216,7 @@ $Shown = ''
 function Show-Status([string]$phase, [string]$send) {
   $code = $Cfg.code.Substring(0, 4) + '-' + $Cfg.code.Substring(4)
   $p = $PhaseFr[$phase]; if (-not $p) { $p = $phase }
-  $txt = "$code|$p|$send"
+  $txt = "$code|$p|$send|$script:LcuWhy"
   if ($txt -eq $script:Shown) { return }
   $script:Shown = $txt
   Clear-Host
@@ -196,7 +229,8 @@ function Show-Status([string]$phase, [string]$send) {
   Write-Host "        $code" -ForegroundColor Yellow
   Write-Host ''
   Write-Host '  Client League : ' -NoNewline
-  if ($phase -eq 'Closed') { Write-Host $p -ForegroundColor DarkGray } elseif ($phase -eq 'ChampSelect') { Write-Host $p -ForegroundColor Green } else { Write-Host $p -ForegroundColor White }
+  if ($phase -eq 'Closed' -and $script:LcuWhy) { Write-Host $script:LcuWhy -ForegroundColor Red }
+  elseif ($phase -eq 'Closed') { Write-Host $p -ForegroundColor DarkGray } elseif ($phase -eq 'ChampSelect') { Write-Host $p -ForegroundColor Green } else { Write-Host $p -ForegroundColor White }
   Write-Host '  Téléphone     : ' -NoNewline
   if ($send -like 'OK*') { Write-Host $send -ForegroundColor Green } else { Write-Host $send -ForegroundColor Red }
   Write-Host ''
@@ -221,7 +255,8 @@ while ($true) {
   if (-not $lcu) { $lcu = Get-Lcu }
   if ($lcu) {
     $r = Lcu-Get $lcu '/lol-gameflow/v1/gameflow-phase'
-    if ($r.Status -eq 0) { $lcu = $null }
+    if ($r.Status -eq 0) { $lcu = $null; $script:LcuWhy = 'League trouvé mais il ne répond pas (' + ([string]$r.Text).Trim() + '), nouvel essai automatique' }
+    else { $script:LcuWhy = '' }
     elseif ($r.Status -eq 200) { $phase = ($r.Text -replace '[^A-Za-z]', '') }
     elseif ($r.Status -eq 401) { $lcu = $null; $phase = 'None' }
     else { $phase = 'None' }
