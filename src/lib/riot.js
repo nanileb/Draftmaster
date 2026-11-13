@@ -18,7 +18,13 @@ export async function relay(path, params) {
   const u = new URL(s.relay.replace(/\/$/, '') + path);
   Object.entries({ platform: s.platform, ...params }).forEach(([k, v]) => { if (v != null) u.searchParams.set(k, v); });
   let r;
-  try { r = await fetch(u.toString()); } catch (e) { throw new Error('Relais Riot injoignable (' + s.relay + ').'); }
+  // Limite de la clé Riot (100 demandes / 2 min) : on attend le délai indiqué par Riot puis on réessaie, 2 fois au plus
+  for (let tries = 0; ; tries++) {
+    try { r = await fetch(u.toString()); } catch (e) { throw new Error('Relais Riot injoignable (' + s.relay + ').'); }
+    if (r.status !== 429 || tries >= 2) break;
+    const after = Math.min(15, Math.max(2, Number(r.headers.get('Retry-After')) || 5));
+    await new Promise(res => setTimeout(res, after * 1000));
+  }
   let body = null; try { body = await r.json(); } catch (e) { /* rien */ }
   if (!r.ok) {
     const code = body && body.error;
