@@ -135,18 +135,6 @@ try {
     }
   }
 } catch {}
-    $desk = [Environment]::GetFolderPath('Desktop')
-    $lnkPath = Join-Path $desk 'DraftMaster PC.lnk'
-    $ws = New-Object -ComObject WScript.Shell
-    $lnk = $ws.CreateShortcut($lnkPath)
-    $lnk.TargetPath = $dest
-    $lnk.WorkingDirectory = $dd
-    $lnk.IconLocation = "$env:SystemRoot\System32\shell32.dll,15"
-    $lnk.Description = 'DraftMaster PC : envoie la sélection des champions sur le téléphone'
-    $lnk.Save()
-    $Shortcut = 'Raccourci « DraftMaster PC » ajouté sur le Bureau : la prochaine fois, lance-le depuis là.'
-  }
-} catch {}
 
 # ------------------------------------------------------------
 # Client League : port et mot de passe de son API locale (ligne de commande du client, sinon fichier lockfile)
