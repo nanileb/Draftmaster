@@ -37,6 +37,7 @@ function restoreGame(champions) {
     role: g.role, ally: back(g.ally), enemy: back(g.enemy), me: (g.me && byId[g.me]) || null,
     side: g.side === 'red' ? 'red' : 'blue', timerStart: g.timerStart || null, kills: g.kills || EMPTY_KILLS,
     bans: (g.bans || []).filter(id => byId[id]),
+    fromPc: !!g.fromPc,
   };
 }
 
@@ -58,6 +59,9 @@ export function useDraftState(champions) {
   const [side, setSide] = useState(init ? init.side : 'blue');
   const [timerStart, setTimerStart] = useState(init ? init.timerStart : null);
   const [kills, setKills] = useState(init ? init.kills : EMPTY_KILLS);
+  // true : la draft vient du PC relié ou de la partie chargée (une nouvelle sélection repart de zéro) ;
+  // false : draft préparée à la main sur le téléphone (une nouvelle sélection garde le poste et le champion prévus)
+  const [fromPc, setFromPc] = useState(init ? init.fromPc : false);
   const [restored, setRestored] = useState(!!(champions && champions.length));
 
   // Champions arrivés après le montage : reprise à ce moment-là
@@ -66,13 +70,13 @@ export function useDraftState(champions) {
     setRestored(true);
     const g = restoreGame(champions); if (!g) return;
     setSelectedRole(g.role); setAllyByRole(g.ally); setEnemyByRole(g.enemy); setMyChampion(g.me);
-    setSide(g.side); setTimerStart(g.timerStart); setKills(g.kills); setBans(g.bans);
+    setSide(g.side); setTimerStart(g.timerStart); setKills(g.kills); setBans(g.bans); setFromPc(g.fromPc);
   }, [champions, restored]);
   useEffect(() => {
     if (!restored) return;
     if (!selectedRole) { writeGame(null); return; }
-    writeGame({ role: selectedRole, ally: idsOf(allyByRole), enemy: idsOf(enemyByRole), me: myChampion ? myChampion.id : null, side, timerStart, kills, bans, savedAt: Date.now() });
-  }, [restored, selectedRole, allyByRole, enemyByRole, myChampion, side, timerStart, kills, bans]);
+    writeGame({ role: selectedRole, ally: idsOf(allyByRole), enemy: idsOf(enemyByRole), me: myChampion ? myChampion.id : null, side, timerStart, kills, bans, fromPc, savedAt: Date.now() });
+  }, [restored, selectedRole, allyByRole, enemyByRole, myChampion, side, timerStart, kills, bans, fromPc]);
 
   // Pool : gardé dans ce navigateur (plus de compte Base44)
   useEffect(() => {
@@ -117,6 +121,7 @@ export function useDraftState(champions) {
     setSide('blue');
     setTimerStart(null);
     setKills(EMPTY_KILLS);
+    setFromPc(false);
     setSelectedRole(role);
     setStep(STEPS.DRAFT);
   }, []);
@@ -176,15 +181,23 @@ export function useDraftState(champions) {
     setSide(g.side || 'blue');
     setKills(EMPTY_KILLS);
     setTimerStart(g.elapsed > 0 ? Date.now() - g.elapsed * 1000 : null);
+    setFromPc(true);
     setStep(STEPS.MATCHUP);
   }, []);
 
   // PC relié (src/lib/pcLink.js) : sélection lue dans le client League. fresh = nouvelle sélection (on repart de zéro),
   // sinon on complète sans défaire les corrections faites à la main (un champion déjà placé n'est pas déplacé).
   // roleHint : poste à prendre si le client n'en donne pas (partie personnalisée, normale à l'aveugle)
+  // Draft préparée sur le téléphone avant la partie : à la nouvelle sélection, le poste prévu sert si le jeu n'en donne pas,
+  // et le champion prévu reste « mon pick » tant que je n'ai rien verrouillé (s'il n'est ni banni ni pris par un allié).
+  // Renvoie le poste retenu (null si inconnu).
   const syncFromPc = useCallback((sel, fresh, roleHint = null) => {
     const byId = Object.fromEntries((champions || []).map(c => [c.id, c]));
-    const role = sel.myRole || roleHint || (fresh ? null : selectedRole);
+    const prepared = fresh && !fromPc && selectedRole;
+    const role = sel.myRole || roleHint || (!fresh || prepared ? selectedRole : null);
+    const takenIds = new Set([...(sel.bans || []), ...sel.mine.filter(m => m.lock && !m.me).map(m => m.id), ...sel.enemy.map(m => m.id)]);
+    const keepMine = prepared && role === selectedRole && myChampion && !takenIds.has(myChampion.id) ? myChampion : null;
+    setFromPc(true);
     if (fresh) { setSide(sel.side || 'blue'); setTimerStart(null); setKills(EMPTY_KILLS); setStep(STEPS.DRAFT); }
     // Bans : ceux du client, plus ceux ajoutés à la main (sauf nouvelle sélection)
     const pcBans = (sel.bans || []).filter(id => byId[id]);
@@ -201,6 +214,7 @@ export function useDraftState(champions) {
           : likely(c).find(x => ROLE_KEYS.includes(x) && !next[x] && x !== role) || ROLE_KEYS.find(x => !next[x] && x !== role);
         if (r) next[r] = c;
       });
+      if (keepMine && role && !sel.me && !next[role]) next[role] = keepMine;
       return next;
     });
     setEnemyByRole(prev => {
@@ -213,8 +227,9 @@ export function useDraftState(champions) {
       return next;
     });
     const me = sel.me && byId[sel.me];
-    if (me) setMyChampion(me); else if (fresh) setMyChampion(null);
-  }, [champions, selectedRole]);
+    if (me) setMyChampion(me); else if (fresh) setMyChampion(keepMine);
+    return role || null;
+  }, [champions, selectedRole, fromPc, myChampion]);
 
   const swapEnemyRoles = useCallback((roleA, roleB) => {
     setEnemyByRole(prev => ({
@@ -290,6 +305,7 @@ export function useDraftState(champions) {
     setSide('blue');
     setTimerStart(null);
     setKills(EMPTY_KILLS);
+    setFromPc(false);
   }, []);
 
   const savePool = useCallback((pool) => {

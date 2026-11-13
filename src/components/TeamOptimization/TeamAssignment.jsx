@@ -119,7 +119,8 @@ export default function TeamAssignment({
                 </div>
                 <button
                   onClick={() => onRemove(role)}
-                  className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 opacity-0 group-hover:opacity-100 transition-all"
+                  aria-label="Retirer de ce poste"
+                  className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-all"
                 >
                   <X className="w-4 h-4" />
                 </button>
