@@ -4,6 +4,7 @@
 // /rank (patch proposé). Sans le patch, /match renvoie la partie complète (avec chronologie) : ça marche, en plus lourd.
 import { DD, DATA, norm } from '@/lib/gameData';
 import { getSettings } from '@/lib/localStore';
+import { rankParticipants } from '@/lib/gameRanking';
 
 const ERRORS = {
   account_not_found: 'Riot ID introuvable : vérifie le pseudo et le tag.',
@@ -52,6 +53,9 @@ function champIcon(name) {
   return { id: c ? c.id : name, name: c ? c.name : name, icon: v ? `${DD}/cdn/${v}/img/champion/${c ? c.id : name}.png` : '' };
 }
 
+// Version du classement : une partie gardée en cache sans classement (ou avec une version plus ancienne) est rechargée une fois
+const RANK_VERSION = 1;
+
 function toMatch(m, puuid) {
   const ps = m.participants || [];
   const me = ps.find(p => p.puuid === puuid);
@@ -60,10 +64,15 @@ function toMatch(m, puuid) {
   const cs = (me.totalMinionsKilled || 0) + (me.neutralMinionsKilled || 0);
   const ch = me.challenges || {};
   const teamDmg = ps.filter(p => p.teamId === me.teamId).reduce((s, p) => s + (p.totalDamageDealtToChampions || 0), 0);
-  const row = p => { const c = champIcon(p.championName); return { championName: c.name, championId: c.id, championIcon: c.icon, summonerName: p.riotIdGameName || null, kills: p.kills, deaths: p.deaths, assists: p.assists, isMe: p.puuid === puuid, role: p.teamPosition }; };
+  // Classement 1 à 10 de la partie (lib/gameRanking.js), gardé avec chaque joueur
+  const ranks = rankParticipants(ps, m.gameDuration || 0);
+  const row = p => {
+    const c = champIcon(p.championName), r = ranks[ps.indexOf(p)] || {};
+    return { championName: c.name, championId: c.id, championIcon: c.icon, summonerName: p.riotIdGameName || null, kills: p.kills, deaths: p.deaths, assists: p.assists, isMe: p.puuid === puuid, role: p.teamPosition, rank: r.rank || null, score: r.score != null ? r.score : null, best: r.best || [], worst: r.worst || [] };
+  };
   const c = champIcon(me.championName);
   return {
-    matchId: m.id, win: !!me.win, championName: c.name, championId: c.id, championIcon: c.icon,
+    matchId: m.id, win: !!me.win, ranked: RANK_VERSION, myRank: (ranks[ps.indexOf(me)] || {}).rank || null, championName: c.name, championId: c.id, championIcon: c.icon,
     level: me.champLevel, gameDuration: fmtDur(m.gameDuration || 0), durationMin: min, role: me.teamPosition || '',
     kills: me.kills, deaths: me.deaths, assists: me.assists, cs, csPerMin: (cs / min).toFixed(1),
     visionScore: me.visionScore || 0, vspm: (me.visionScore || 0) / min,
@@ -83,7 +92,7 @@ function toMatch(m, puuid) {
 export async function fetchMatchHistory(riotId, count = 10, onProgress, known = []) {
   const { puuid, ids } = await relay('/matches', { riotId, count });
   const list = (ids || []).slice(0, count);
-  const have = {}; (known || []).forEach(m => { if (m && m.matchId) have[m.matchId] = m; });
+  const have = {}; (known || []).forEach(m => { if (m && m.matchId && m.ranked === RANK_VERSION) have[m.matchId] = m; });
   const out = [];
   let i = 0;
   // 2 parties à la fois : reste sous la limite de l'API Riot (clé de développement)
