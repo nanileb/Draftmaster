@@ -8,7 +8,7 @@ import { useOutletContext } from 'react-router-dom';
 import {
   User, Edit2, Check, X, RefreshCw, Loader2,
   Sword, Shield, BookUser, ChevronDown, ChevronUp,
-  BarChart2, Clock, Medal, Settings, Crosshair
+  BarChart2, Clock, Medal, Settings, Crosshair, Crown, ThumbsDown, Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FullAnalysisTab from '@/components/profile/FullAnalysisTab';
@@ -86,21 +86,91 @@ function ItemIcon({ itemId, ddVersion }) {
   );
 }
 
+// Classement 1 à 10 de la partie (lib/gameRanking.js) : 1 = le plus utile, 10 = le moins utile
+const rankColor = r => r === 1 ? 'bg-gold text-background' : r <= 3 ? 'bg-green-win/80 text-background'
+  : r >= 10 ? 'bg-red-lose text-white' : r >= 8 ? 'bg-red-lose/30 text-red-lose' : 'bg-secondary text-muted-foreground';
+const rankText = r => r === 1 ? 'MVP' : r === 10 ? 'Dernier' : r + 'e';
+
+function RankBadge({ rank, className }) {
+  if (!rank) return null;
+  return (
+    <span className={cn('inline-flex items-center justify-center rounded-md text-[10px] font-bold min-w-[18px] h-[18px] px-1 shrink-0', rankColor(rank), className)}>
+      {rank}
+    </span>
+  );
+}
+
 function ParticipantRow({ p, ddVersion }) {
   return (
     <div className={cn('flex items-center gap-1.5 py-1', p.isMe && 'font-semibold')}>
+      <RankBadge rank={p.rank} />
       <img
         src={p.championIcon}
         alt={p.championName}
-        className={cn('w-6 h-6 rounded', p.isMe && 'ring-1 ring-primary')}
+        className={cn('w-6 h-6 rounded shrink-0', p.isMe && 'ring-1 ring-primary')}
         onError={e => { e.target.style.display = 'none'; }}
       />
-      <span className={cn('text-[11px] w-20 truncate', p.isMe ? 'text-primary' : 'text-muted-foreground')}>
+      <span className={cn('text-[11px] flex-1 min-w-0 truncate', p.isMe ? 'text-primary' : 'text-muted-foreground')}>
         {p.summonerName || p.championName}
       </span>
-      <span className="text-[11px] text-muted-foreground ml-auto">
+      <span className="text-[11px] text-muted-foreground shrink-0">
         {p.kills}/{p.deaths}/{p.assists}
       </span>
+    </div>
+  );
+}
+
+// Les 10 joueurs du plus utile au moins utile, avec la note sur 10 et ce qui l'explique
+function GameRanking({ match }) {
+  const all = [...match.allies.map(p => ({ ...p, ally: true })), ...match.enemies.map(p => ({ ...p, ally: false, isMe: false }))]
+    .filter(p => p.rank).sort((a, b) => a.rank - b.rank);
+  if (all.length < 2) return null;
+  const top = all[0], last = all[all.length - 1];
+  const who = p => (p.isMe ? 'Toi' : (p.summonerName || p.championName)) + ' (' + p.championName + ')';
+  return (
+    <div className="mt-3 pt-2 border-t border-border">
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="rounded-lg border border-gold/40 bg-gold/10 px-2 py-1.5 min-w-0">
+          <div className="flex items-center gap-1 text-[10px] font-semibold text-gold uppercase tracking-wider"><Crown className="w-3 h-3" />Le plus utile</div>
+          <div className="text-xs font-bold truncate">{who(top)}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{top.score}/10{top.best.length ? ' · ' + top.best.join(', ') : ''}</div>
+        </div>
+        <div className="rounded-lg border border-red-lose/40 bg-red-lose/10 px-2 py-1.5 min-w-0">
+          <div className="flex items-center gap-1 text-[10px] font-semibold text-red-lose uppercase tracking-wider"><ThumbsDown className="w-3 h-3" />Le moins utile</div>
+          <div className="text-xs font-bold truncate">{who(last)}</div>
+          <div className="text-[10px] text-muted-foreground truncate">{last.score}/10{last.worst.length ? ' · ' + last.worst.join(', ') : ''}</div>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 mb-1">
+        <Trophy className="w-3 h-3 text-muted-foreground" />
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Classement de la partie</span>
+      </div>
+      {all.map(p => (
+        <div key={p.rank} className={cn('flex items-center gap-1.5 py-1', p.isMe && 'bg-primary/10 rounded-md -mx-1 px-1')}>
+          <RankBadge rank={p.rank} />
+          <img src={p.championIcon} alt={p.championName}
+            className={cn('w-6 h-6 rounded shrink-0 border', p.ally ? 'border-blue-info/60' : 'border-red-lose/60')}
+            onError={e => { e.target.style.display = 'none'; }} />
+          <div className="flex-1 min-w-0">
+            <div className={cn('text-[11px] truncate', p.isMe ? 'text-primary font-semibold' : 'text-foreground')}>
+              {p.isMe ? 'Toi' : (p.summonerName || p.championName)}
+              <span className="text-muted-foreground font-normal"> · {ROLE_LABELS[p.role] || p.championName}</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground truncate">
+              {p.best.length ? '+ ' + p.best.join(', ') : ''}{p.best.length && p.worst.length ? '  ' : ''}{p.worst.length ? '− ' + p.worst.join(', ') : ''}
+            </div>
+          </div>
+          <div className="w-14 shrink-0 text-right">
+            <div className="text-[11px] font-bold">{p.score}<span className="text-muted-foreground font-normal">/10</span></div>
+            <div className="h-1 rounded-full bg-secondary overflow-hidden">
+              <div className={cn('h-full', p.rank === 1 ? 'bg-gold' : p.rank <= 3 ? 'bg-green-win' : p.rank >= 8 ? 'bg-red-lose' : 'bg-blue-info')} style={{ width: (p.score * 10) + '%' }} />
+            </div>
+          </div>
+        </div>
+      ))}
+      <p className="text-[10px] text-muted-foreground mt-1">
+        Note comparée à ce qu'on attend du poste : KDA, morts, participation aux kills, dégâts, golds, farm, vision, objectifs, et pour un support les soins, boucliers et contrôles.
+      </p>
     </div>
   );
 }
@@ -149,6 +219,11 @@ function MatchCard({ match, ddVersion }) {
               {match.kills}/{match.deaths}/{match.assists}
             </span>
             <KDABadge kills={match.kills} deaths={match.deaths} assists={match.assists} />
+            {match.myRank && (
+              <span className={cn('ml-auto text-[10px] font-bold rounded-md px-1.5 py-0.5', rankColor(match.myRank))}>
+                {rankText(match.myRank)}{match.myRank !== 1 && match.myRank !== 10 ? ' / 10' : ''}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-[11px] text-muted-foreground">{match.cs} CS ({match.csPerMin}/min)</span>
@@ -198,6 +273,7 @@ function MatchCard({ match, ddVersion }) {
             <span>Or: {match.goldEarned?.toLocaleString()}</span>
             <span>{match.gameDate}</span>
           </div>
+          <GameRanking match={match} />
         </div>
       )}
     </div>
