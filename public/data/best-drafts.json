@@ -1,20 +1,20 @@
 {
- "generated": "2026-11-16T16:32:06.954Z",
+ "generated": "2026-11-17T20:11:17.861Z",
  "patch": "16.22",
  "ddragon": "16.22.1",
  "minGames": 100,
  "inputs": {
   "ddragon": "16.22.1",
-  "builds": "16.22 2026-11-10T12:37:09.515Z",
+  "builds": "16.22 2026-11-17T20:10:58.773Z",
   "counters": "16.21 2026-11-10",
   "meta": "26.22 2026-11-08"
  },
- "source": "builds.json (4711 parties Challenger + Grandmaster + Master, euw1 + kr), counters.json (Lolalytics Émeraude+, patch 16.21), meta.json (26.22)",
+ "source": "builds.json (6147 parties Challenger + Grandmaster + Master, euw1 + kr), counters.json (Lolalytics Émeraude+, patch 16.21), meta.json (26.22)",
  "drafts": [
   {
    "playstyle": "Full engage",
    "winCondition": "Forcer les combats à 5 autour des objectifs avec plusieurs engages",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 57.9 %.",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 58 %.",
    "champions": [
     {
      "id": "Kennen",
@@ -27,8 +27,8 @@
      "role": "jungle"
     },
     {
-     "id": "Cassiopeia",
-     "name": "Cassiopeia",
+     "id": "Ekko",
+     "name": "Ekko",
      "role": "mid"
     },
     {
@@ -45,29 +45,29 @@
    "composition": {
     "TOP": "Kennen",
     "JUNGLE": "Diana",
-    "MID": "Cassiopeia",
+    "MID": "Ekko",
     "ADC": "Zeri",
     "SUPPORT": "Alistar"
    },
-   "winRate": 57.9,
+   "winRate": 58,
    "draftScore": 92,
    "synergies": [
-    "Zeri + Alistar : 71 % de victoires ensemble (31 parties)"
+    "Zeri + Alistar : 69 % de victoires ensemble (36 parties)"
    ],
    "strengths": [
     "Plusieurs engages : Kennen, Diana, Alistar",
-    "Alistar (Support) : 57 % sur 893 parties au patch"
+    "Diana (Jungle) : 63 % sur 176 parties au patch"
    ],
    "weaknesses": [
-    "À garder pour la fin de draft (facile à contrer) : Cassiopeia"
+    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
    ],
-   "score": 27.1,
+   "score": 28.4,
    "patch": "16.22"
   },
   {
    "playstyle": "Protéger le carry",
    "winCondition": "Mettre l'ADC en sécurité en teamfight et le laisser faire les dégâts",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 54.4 %.",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 56.5 %.",
    "champions": [
     {
      "id": "Sion",
@@ -75,47 +75,47 @@
      "role": "top"
     },
     {
-     "id": "Zyra",
-     "name": "Zyra",
+     "id": "Nidalee",
+     "name": "Nidalee",
      "role": "jungle"
     },
     {
-     "id": "Sylas",
-     "name": "Sylas",
+     "id": "Zoe",
+     "name": "Zoé",
      "role": "mid"
     },
     {
-     "id": "Sivir",
-     "name": "Sivir",
+     "id": "Zeri",
+     "name": "Zeri",
      "role": "adc"
     },
     {
-     "id": "Poppy",
-     "name": "Poppy",
+     "id": "Janna",
+     "name": "Janna",
      "role": "support"
     }
    ],
    "composition": {
     "TOP": "Sion",
-    "JUNGLE": "Zyra",
-    "MID": "Sylas",
-    "ADC": "Sivir",
-    "SUPPORT": "Poppy"
+    "JUNGLE": "Nidalee",
+    "MID": "Zoé",
+    "ADC": "Zeri",
+    "SUPPORT": "Janna"
    },
-   "winRate": 54.4,
-   "draftScore": 81,
+   "winRate": 56.5,
+   "draftScore": 89,
    "synergies": [
-    "Pas de paire mesurée sur assez de parties : synergie estimée par les profils"
+    "Nidalee + Zeri : 60 % de victoires ensemble (30 parties)"
    ],
    "strengths": [
-    "Plusieurs engages : Sion, Poppy",
-    "Frontline solide : Sion, Poppy",
-    "Dégâts mixtes : difficile à itemiser pour l'adversaire"
+    "Engage fiable : Sion",
+    "Dégâts mixtes : difficile à itemiser pour l'adversaire",
+    "Nidalee (Jungle) : 57 % sur 592 parties au patch"
    ],
    "weaknesses": [
-    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
+    "À garder pour la fin de draft (facile à contrer) : Nidalee"
    ],
-   "score": 18.8,
+   "score": 24.3,
    "patch": "16.22"
   },
   {
@@ -134,8 +134,118 @@
      "role": "jungle"
     },
     {
+     "id": "Hwei",
+     "name": "Hwei",
+     "role": "mid"
+    },
+    {
+     "id": "Taliyah",
+     "name": "Taliyah",
+     "role": "adc"
+    },
+    {
+     "id": "Blitzcrank",
+     "name": "Blitzcrank",
+     "role": "support"
+    }
+   ],
+   "composition": {
+    "TOP": "Olaf",
+    "JUNGLE": "Nidalee",
+    "MID": "Hwei",
+    "ADC": "Taliyah",
+    "SUPPORT": "Blitzcrank"
+   },
+   "winRate": 56.9,
+   "draftScore": 81,
+   "synergies": [
+    "Blitzcrank + Taliyah : 69 % de victoires ensemble (29 parties)",
+    "Olaf + Nidalee : 68 % de victoires ensemble (44 parties)"
+   ],
+   "strengths": [
+    "Engage fiable : Blitzcrank",
+    "Contrôle de zone : Hwei, Taliyah",
+    "Frontline solide : Olaf, Blitzcrank"
+   ],
+   "weaknesses": [
+    "À garder pour la fin de draft (facile à contrer) : Olaf, Nidalee"
+   ],
+   "score": 26,
+   "patch": "16.22"
+  },
+  {
+   "playstyle": "Pick & catch",
+   "winCondition": "Attraper une cible isolée grâce à la vision, puis jouer l'objectif en surnombre",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 55.3 %.",
+   "champions": [
+    {
+     "id": "Aatrox",
+     "name": "Aatrox",
+     "role": "top"
+    },
+    {
+     "id": "Naafiri",
+     "name": "Naafiri",
+     "role": "jungle"
+    },
+    {
      "id": "Pantheon",
      "name": "Pantheon",
+     "role": "mid"
+    },
+    {
+     "id": "Yasuo",
+     "name": "Yasuo",
+     "role": "adc"
+    },
+    {
+     "id": "Rakan",
+     "name": "Rakan",
+     "role": "support"
+    }
+   ],
+   "composition": {
+    "TOP": "Aatrox",
+    "JUNGLE": "Naafiri",
+    "MID": "Pantheon",
+    "ADC": "Yasuo",
+    "SUPPORT": "Rakan"
+   },
+   "winRate": 55.3,
+   "draftScore": 79,
+   "synergies": [
+    "Rakan + Yasuo : 67 % de victoires ensemble (36 parties)",
+    "Naafiri + Rakan : 62 % de victoires ensemble (47 parties)"
+   ],
+   "strengths": [
+    "Engage fiable : Rakan",
+    "Contrôle de zone : Yasuo",
+    "Naafiri (Jungle) : 54 % sur 534 parties au patch"
+   ],
+   "weaknesses": [
+    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
+   ],
+   "score": 21.9,
+   "patch": "16.22"
+  },
+  {
+   "playstyle": "Plongée",
+   "winCondition": "Plonger sur les carries adverses dès que les contrôles sont disponibles",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 56.9 %.",
+   "champions": [
+    {
+     "id": "Ambessa",
+     "name": "Ambessa",
+     "role": "top"
+    },
+    {
+     "id": "Diana",
+     "name": "Diana",
+     "role": "jungle"
+    },
+    {
+     "id": "Ekko",
+     "name": "Ekko",
      "role": "mid"
     },
     {
@@ -150,38 +260,37 @@
     }
    ],
    "composition": {
-    "TOP": "Olaf",
-    "JUNGLE": "Nidalee",
-    "MID": "Pantheon",
+    "TOP": "Ambessa",
+    "JUNGLE": "Diana",
+    "MID": "Ekko",
     "ADC": "Corki",
     "SUPPORT": "Alistar"
    },
    "winRate": 56.9,
    "draftScore": 92,
    "synergies": [
-    "Corki + Alistar : 63 % de victoires ensemble (59 parties)",
-    "Nidalee + Alistar : 64 % de victoires ensemble (56 parties)",
-    "Nidalee + Pantheon : 65 % de victoires ensemble (40 parties)"
+    "Corki + Alistar : 60 % de victoires ensemble (91 parties)",
+    "Alistar + Ambessa : 61 % de victoires ensemble (64 parties)"
    ],
    "strengths": [
-    "Engage fiable : Alistar",
-    "Frontline solide : Olaf, Alistar",
+    "Plusieurs engages : Ambessa, Diana, Alistar",
+    "Frontline solide : Ambessa, Alistar",
     "Dégâts mixtes : difficile à itemiser pour l'adversaire"
    ],
    "weaknesses": [
-    "À garder pour la fin de draft (facile à contrer) : Olaf, Nidalee"
+    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
    ],
-   "score": 27.4,
+   "score": 25.9,
    "patch": "16.22"
   },
   {
-   "playstyle": "Pick & catch",
-   "winCondition": "Attraper une cible isolée grâce à la vision, puis jouer l'objectif en surnombre",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 55.7 %.",
+   "playstyle": "Scaling",
+   "winCondition": "Survivre à la phase de lane puis gagner les combats de fin de partie",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 54.4 %.",
    "champions": [
     {
-     "id": "Fiora",
-     "name": "Fiora",
+     "id": "Vayne",
+     "name": "Vayne",
      "role": "top"
     },
     {
@@ -190,8 +299,8 @@
      "role": "jungle"
     },
     {
-     "id": "Katarina",
-     "name": "Katarina",
+     "id": "Viktor",
+     "name": "Viktor",
      "role": "mid"
     },
     {
@@ -206,156 +315,46 @@
     }
    ],
    "composition": {
-    "TOP": "Fiora",
+    "TOP": "Vayne",
     "JUNGLE": "Zyra",
-    "MID": "Katarina",
+    "MID": "Viktor",
     "ADC": "Kalista",
     "SUPPORT": "Thresh"
    },
-   "winRate": 55.7,
-   "draftScore": 88,
+   "winRate": 54.4,
+   "draftScore": 79,
    "synergies": [
-    "Kalista + Thresh : 64 % de victoires ensemble (22 parties)"
+    "Kalista + Thresh : 60 % de victoires ensemble (30 parties)"
    ],
    "strengths": [
     "Engage fiable : Thresh",
-    "Contrôle de zone : Zyra",
+    "Contrôle de zone : Zyra, Viktor",
     "Dégâts mixtes : difficile à itemiser pour l'adversaire"
    ],
    "weaknesses": [
-    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
+    "À garder pour la fin de draft (facile à contrer) : Vayne, Viktor"
    ],
-   "score": 22.4,
-   "patch": "16.22"
-  },
-  {
-   "playstyle": "Plongée",
-   "winCondition": "Plonger sur les carries adverses dès que les contrôles sont disponibles",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 53.9 %.",
-   "champions": [
-    {
-     "id": "Gragas",
-     "name": "Gragas",
-     "role": "top"
-    },
-    {
-     "id": "Talon",
-     "name": "Talon",
-     "role": "jungle"
-    },
-    {
-     "id": "Ekko",
-     "name": "Ekko",
-     "role": "mid"
-    },
-    {
-     "id": "Xayah",
-     "name": "Xayah",
-     "role": "adc"
-    },
-    {
-     "id": "Camille",
-     "name": "Camille",
-     "role": "support"
-    }
-   ],
-   "composition": {
-    "TOP": "Gragas",
-    "JUNGLE": "Talon",
-    "MID": "Ekko",
-    "ADC": "Xayah",
-    "SUPPORT": "Camille"
-   },
-   "winRate": 53.9,
-   "draftScore": 81,
-   "synergies": [
-    "Xayah + Camille : 67 % de victoires ensemble (21 parties)"
-   ],
-   "strengths": [
-    "Plusieurs engages : Gragas, Camille",
-    "Dégâts mixtes : difficile à itemiser pour l'adversaire",
-    "Talon (Jungle) : 54 % sur 293 parties au patch"
-   ],
-   "weaknesses": [
-    "À garder pour la fin de draft (facile à contrer) : Gragas, Camille"
-   ],
-   "score": 18,
-   "patch": "16.22"
-  },
-  {
-   "playstyle": "Scaling",
-   "winCondition": "Survivre à la phase de lane puis gagner les combats de fin de partie",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 56.9 %.",
-   "champions": [
-    {
-     "id": "Malphite",
-     "name": "Malphite",
-     "role": "top"
-    },
-    {
-     "id": "Taliyah",
-     "name": "Taliyah",
-     "role": "jungle"
-    },
-    {
-     "id": "Viktor",
-     "name": "Viktor",
-     "role": "mid"
-    },
-    {
-     "id": "Zeri",
-     "name": "Zeri",
-     "role": "adc"
-    },
-    {
-     "id": "Alistar",
-     "name": "Alistar",
-     "role": "support"
-    }
-   ],
-   "composition": {
-    "TOP": "Malphite",
-    "JUNGLE": "Taliyah",
-    "MID": "Viktor",
-    "ADC": "Zeri",
-    "SUPPORT": "Alistar"
-   },
-   "winRate": 56.9,
-   "draftScore": 91,
-   "synergies": [
-    "Zeri + Alistar : 71 % de victoires ensemble (31 parties)",
-    "Taliyah + Alistar : 65 % de victoires ensemble (52 parties)",
-    "Zeri + Taliyah : 60 % de victoires ensemble (30 parties)"
-   ],
-   "strengths": [
-    "Plusieurs engages : Malphite, Alistar",
-    "Frontline solide : Malphite, Alistar",
-    "Alistar (Support) : 57 % sur 893 parties au patch"
-   ],
-   "weaknesses": [
-    "À garder pour la fin de draft (facile à contrer) : Viktor"
-   ],
-   "score": 25.1,
+   "score": 17.4,
    "patch": "16.22"
   },
   {
    "playstyle": "Tempo early",
    "winCondition": "Prendre l'avance avant 15 minutes (plaques, drakes, larves) et finir vite",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 54.3 %.",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 53.3 %.",
    "champions": [
     {
-     "id": "Garen",
-     "name": "Garen",
+     "id": "Anivia",
+     "name": "Anivia",
      "role": "top"
     },
     {
-     "id": "Nidalee",
-     "name": "Nidalee",
+     "id": "Nunu",
+     "name": "Nunu et Willump",
      "role": "jungle"
     },
     {
-     "id": "Pantheon",
-     "name": "Pantheon",
+     "id": "Cassiopeia",
+     "name": "Cassiopeia",
      "role": "mid"
     },
     {
@@ -364,38 +363,38 @@
      "role": "adc"
     },
     {
-     "id": "Blitzcrank",
-     "name": "Blitzcrank",
+     "id": "Nami",
+     "name": "Nami",
      "role": "support"
     }
    ],
    "composition": {
-    "TOP": "Garen",
-    "JUNGLE": "Nidalee",
-    "MID": "Pantheon",
+    "TOP": "Anivia",
+    "JUNGLE": "Nunu et Willump",
+    "MID": "Cassiopeia",
     "ADC": "Draven",
-    "SUPPORT": "Blitzcrank"
+    "SUPPORT": "Nami"
    },
-   "winRate": 54.3,
-   "draftScore": 78,
+   "winRate": 53.3,
+   "draftScore": 74,
    "synergies": [
-    "Nidalee + Pantheon : 65 % de victoires ensemble (40 parties)"
+    "Pas de paire mesurée sur assez de parties : synergie estimée par les profils"
    ],
    "strengths": [
-    "Engage fiable : Blitzcrank",
-    "Frontline solide : Garen, Blitzcrank",
-    "Dégâts mixtes : difficile à itemiser pour l'adversaire"
+    "Engage fiable : Nunu et Willump",
+    "Contrôle de zone : Anivia, Cassiopeia",
+    "Anivia (Top) : 58 % sur 111 parties au patch"
    ],
    "weaknesses": [
-    "À garder pour la fin de draft (facile à contrer) : Garen, Nidalee, Draven"
+    "À garder pour la fin de draft (facile à contrer) : Cassiopeia, Draven"
    ],
-   "score": 20.5,
+   "score": 15.8,
    "patch": "16.22"
   },
   {
    "playstyle": "Compo équilibrée",
    "winCondition": "Full Engage — Jouer les objectifs avec une compo complète : engage, frontline, dégâts mixtes",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 55.2 %.",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 53.7 %.",
    "champions": [
     {
      "id": "Shen",
@@ -403,74 +402,18 @@
      "role": "top"
     },
     {
-     "id": "Khazix",
-     "name": "Kha'Zix",
+     "id": "Sylas",
+     "name": "Sylas",
      "role": "jungle"
     },
     {
-     "id": "Syndra",
-     "name": "Syndra",
+     "id": "Annie",
+     "name": "Annie",
      "role": "mid"
     },
     {
      "id": "Yunara",
      "name": "Yunara",
-     "role": "adc"
-    },
-    {
-     "id": "Alistar",
-     "name": "Alistar",
-     "role": "support"
-    }
-   ],
-   "composition": {
-    "TOP": "Shen",
-    "JUNGLE": "Kha'Zix",
-    "MID": "Syndra",
-    "ADC": "Yunara",
-    "SUPPORT": "Alistar"
-   },
-   "winRate": 55.2,
-   "draftScore": 88,
-   "synergies": [
-    "Yunara + Alistar : 61 % de victoires ensemble (38 parties)",
-    "Kha'Zix + Alistar : 65 % de victoires ensemble (31 parties)",
-    "Syndra + Alistar : 70 % de victoires ensemble (63 parties)"
-   ],
-   "strengths": [
-    "Plusieurs engages : Shen, Alistar",
-    "Frontline solide : Shen, Alistar",
-    "Dégâts mixtes : difficile à itemiser pour l'adversaire"
-   ],
-   "weaknesses": [
-    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
-   ],
-   "score": 18,
-   "patch": "16.22"
-  },
-  {
-   "playstyle": "Full engage",
-   "winCondition": "Forcer les combats à 5 autour des objectifs avec plusieurs engages",
-   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 54.4 %.",
-   "champions": [
-    {
-     "id": "Kennen",
-     "name": "Kennen",
-     "role": "top"
-    },
-    {
-     "id": "Diana",
-     "name": "Diana",
-     "role": "jungle"
-    },
-    {
-     "id": "Yone",
-     "name": "Yone",
-     "role": "mid"
-    },
-    {
-     "id": "Velkoz",
-     "name": "Vel'Koz",
      "role": "adc"
     },
     {
@@ -480,25 +423,82 @@
     }
    ],
    "composition": {
-    "TOP": "Kennen",
-    "JUNGLE": "Diana",
-    "MID": "Yone",
-    "ADC": "Vel'Koz",
+    "TOP": "Shen",
+    "JUNGLE": "Sylas",
+    "MID": "Annie",
+    "ADC": "Yunara",
     "SUPPORT": "Rell"
    },
-   "winRate": 54.4,
-   "draftScore": 76,
+   "winRate": 53.7,
+   "draftScore": 79,
    "synergies": [
-    "Rell + Vel'Koz : 65 % de victoires ensemble (20 parties)"
+    "Yunara + Rell : 61 % de victoires ensemble (23 parties)",
+    "Rell + Sylas : 63 % de victoires ensemble (35 parties)",
+    "Yunara + Sylas : 57 % de victoires ensemble (75 parties)"
    ],
    "strengths": [
-    "Plusieurs engages : Kennen, Diana, Yone, Rell",
-    "Kennen (Top) : 60 % sur 155 parties au patch"
+    "Plusieurs engages : Shen, Rell",
+    "Frontline solide : Shen, Rell",
+    "Dégâts mixtes : difficile à itemiser pour l'adversaire"
    ],
    "weaknesses": [
     "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
    ],
-   "score": 19.8,
+   "score": 13.2,
+   "patch": "16.22"
+  },
+  {
+   "playstyle": "Full engage",
+   "winCondition": "Forcer les combats à 5 autour des objectifs avec plusieurs engages",
+   "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 54.9 %.",
+   "champions": [
+    {
+     "id": "Kennen",
+     "name": "Kennen",
+     "role": "top"
+    },
+    {
+     "id": "Vi",
+     "name": "Vi",
+     "role": "jungle"
+    },
+    {
+     "id": "TwistedFate",
+     "name": "Twisted Fate",
+     "role": "mid"
+    },
+    {
+     "id": "Velkoz",
+     "name": "Vel'Koz",
+     "role": "adc"
+    },
+    {
+     "id": "Rakan",
+     "name": "Rakan",
+     "role": "support"
+    }
+   ],
+   "composition": {
+    "TOP": "Kennen",
+    "JUNGLE": "Vi",
+    "MID": "Twisted Fate",
+    "ADC": "Vel'Koz",
+    "SUPPORT": "Rakan"
+   },
+   "winRate": 54.9,
+   "draftScore": 78,
+   "synergies": [
+    "Rakan + Vel'Koz : 70 % de victoires ensemble (23 parties)",
+    "Vi + Rakan : 59 % de victoires ensemble (32 parties)"
+   ],
+   "strengths": [
+    "Plusieurs engages : Kennen, Vi, Rakan",
+    "Kennen (Top) : 59 % sur 203 parties au patch"
+   ],
+   "weaknesses": [
+    "Pas de faiblesse structurelle nette : la différence se fera sur l'exécution"
+   ],
+   "score": 20.3,
    "patch": "16.22"
   },
   {
@@ -507,52 +507,52 @@
    "description": "Compo construite à partir des champions les plus solides du patch à chaque poste (parties Challenger / GM / Master) et des paires qui gagnent ensemble. Victoire estimée face à une compo moyenne : 53.2 %.",
    "champions": [
     {
-     "id": "Ornn",
-     "name": "Ornn",
+     "id": "Sion",
+     "name": "Sion",
      "role": "top"
     },
     {
-     "id": "Taliyah",
-     "name": "Taliyah",
+     "id": "Rengar",
+     "name": "Rengar",
      "role": "jungle"
     },
     {
-     "id": "Zoe",
-     "name": "Zoé",
+     "id": "Orianna",
+     "name": "Orianna",
      "role": "mid"
     },
     {
-     "id": "Aphelios",
-     "name": "Aphelios",
+     "id": "Karthus",
+     "name": "Karthus",
      "role": "adc"
     },
     {
-     "id": "Janna",
-     "name": "Janna",
+     "id": "Taric",
+     "name": "Taric",
      "role": "support"
     }
    ],
    "composition": {
-    "TOP": "Ornn",
-    "JUNGLE": "Taliyah",
-    "MID": "Zoé",
-    "ADC": "Aphelios",
-    "SUPPORT": "Janna"
+    "TOP": "Sion",
+    "JUNGLE": "Rengar",
+    "MID": "Orianna",
+    "ADC": "Karthus",
+    "SUPPORT": "Taric"
    },
    "winRate": 53.2,
    "draftScore": 78,
    "synergies": [
-    "Aphelios + Taliyah : 57 % de victoires ensemble (30 parties)"
+    "Pas de paire mesurée sur assez de parties : synergie estimée par les profils"
    ],
    "strengths": [
-    "Engage fiable : Ornn",
-    "Contrôle de zone : Taliyah",
-    "Taliyah (Jungle) : 55 % sur 419 parties au patch"
+    "Engage fiable : Sion",
+    "Contrôle de zone : Orianna, Karthus",
+    "Frontline solide : Sion, Taric"
    ],
    "weaknesses": [
-    "À garder pour la fin de draft (facile à contrer) : Aphelios"
+    "À garder pour la fin de draft (facile à contrer) : Rengar"
    ],
-   "score": 16.2,
+   "score": 15.9,
    "patch": "16.22"
   }
  ]
